@@ -43,6 +43,25 @@ export default function ProductCard({ product, showBuyNow = false }: { product: 
     <article className={styles.card}>
       <div className={styles.visual}>
         <Link href={`/products/${product.slug}`} className={styles.artLink} aria-label={`${product.name} view`}><ProductArtwork product={product} /></Link>
+        {product.stock < 1 && (
+          <span style={{
+            position: "absolute",
+            top: "12px",
+            left: "12px",
+            background: "rgba(220, 38, 38, 0.92)",
+            color: "#fff",
+            fontSize: "10px",
+            fontWeight: 700,
+            padding: "4px 8px",
+            borderRadius: "6px",
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+            zIndex: 3,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.15)"
+          }}>
+            Out of Stock
+          </span>
+        )}
         <button className={`${styles.wishlist} ${saved ? styles.saved : ""}`} onClick={() => toggleWishlist(product.id)} aria-label={saved ? "Remove from wishlist" : "Add to wishlist"} aria-pressed={saved}><Heart size={17} fill={saved ? "currentColor" : "none"} /></button>
         {showBuyNow ? <div className={styles.cardActions}>
           <button type="button" className={`${styles.quickAdd} ${added ? styles.added : ""}`} onClick={handleAdd} disabled={product.stock < 1} aria-live="polite">
