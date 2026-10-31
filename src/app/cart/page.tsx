@@ -94,8 +94,17 @@ export default function CartPage() {
   };
 
   const lines = cart
-    .map((line) => ({ ...line, product: allProducts.find((product) => product.id === line.productId) }))
-    .filter((line) => line.product);
+    .map((line) => {
+      const lower = String(line.productId).toLowerCase().trim();
+      const product = allProducts.find(
+        (p) =>
+          String(p.id).toLowerCase().trim() === lower ||
+          (p.slug && p.slug.toLowerCase().trim() === lower) ||
+          (p.sku && p.sku.toLowerCase().trim() === lower)
+      );
+      return { ...line, product };
+    })
+    .filter((line): line is { productId: string; quantity: number; product: NonNullable<typeof line.product> } => Boolean(line.product));
   const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0);
   const shipping = subtotal >= 1500 || subtotal === 0 ? 0 : 99;
   const discountAmount = appliedCoupon ? Math.min(subtotal, appliedCoupon.discount) : 0;

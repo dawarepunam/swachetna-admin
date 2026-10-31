@@ -42,14 +42,28 @@ function readSavedStore(): { cart: CartLine[]; wishlist: string[] } {
 }
 
 export function StoreProvider({ children, allProducts }: { children: ReactNode; allProducts?: Product[] }) {
-  const products = allProducts && allProducts.length > 0 ? allProducts : staticProducts;
-  const productIds = useMemo(() => new Set(products.map((p) => p.id)), [products]);
+  const products = useMemo(() => {
+    return allProducts && allProducts.length > 0 ? allProducts : staticProducts;
+  }, [allProducts]);
 
   const [cart, setCart] = useState<CartLine[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
 
+  // Helper to match a product by id, slug or sku (ensures consistency across Strapi & Fallback IDs)
+  const findProduct = useCallback((lookupId: string): Product | undefined => {
+    if (!lookupId) return undefined;
+    const lower = String(lookupId).toLowerCase().trim();
+    return products.find(
+      (p) =>
+        String(p.id).toLowerCase().trim() === lower ||
+        (p.slug && p.slug.toLowerCase().trim() === lower) ||
+        (p.sku && p.sku.toLowerCase().trim() === lower)
+    );
+  }, [products]);
+
+  // Read saved store from localStorage on mount
   useEffect(() => {
     const saved = readSavedStore();
     setCart(saved.cart);
@@ -57,9 +71,30 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
     setReady(true);
   }, []);
 
+  // Filter out ghost cart items whose products no longer exist once products are ready
+  useEffect(() => {
+    if (!ready || products.length === 0) return;
+    setCart((current) => {
+      const valid = current.filter((line) => {
+        const found = findProduct(line.productId);
+        return Boolean(found);
+      });
+      // Only update if count changed
+      if (valid.length !== current.length) {
+        return valid;
+      }
+      return current;
+    });
+  }, [ready, products, findProduct]);
+
+  // Persist valid cart and wishlist whenever changed
   useEffect(() => {
     if (!ready) return;
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cart, wishlist })); } catch { /* Keep shopping available when browser storage is unavailable. */ }
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cart, wishlist }));
+    } catch {
+      /* Keep shopping available when browser storage is unavailable. */
+    }
   }, [cart, wishlist, ready]);
 
   useEffect(() => {
@@ -68,12 +103,12 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
       if (!event.newValue) { setCart([]); setWishlist([]); return; }
       try {
         const saved = JSON.parse(event.newValue) as SavedStore;
-        const cart = Array.isArray(saved.cart) ? saved.cart.filter((line): line is CartLine =>
+        const rawCart = Array.isArray(saved.cart) ? saved.cart.filter((line): line is CartLine =>
           line && typeof line === "object" && typeof (line as CartLine).productId === "string"
         ) : [];
-        const wishlist = Array.isArray(saved.wishlist) ? saved.wishlist.filter((id): id is string => typeof id === "string") : [];
-        setCart(cart);
-        setWishlist([...new Set(wishlist)]);
+        const rawWishlist = Array.isArray(saved.wishlist) ? saved.wishlist.filter((id): id is string => typeof id === "string") : [];
+        setCart(rawCart);
+        setWishlist([...new Set(rawWishlist)]);
       } catch { /* Ignore malformed data written by another tab. */ }
     };
     window.addEventListener("storage", syncFromAnotherTab);
@@ -83,43 +118,95 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
   const addToCart = useCallback((product: Product, requestedQuantity = 1) => {
     if (product.stock < 1) { setNotice(`${product.name} is currently out of stock.`); return; }
     const quantity = Math.min(product.stock, Math.max(1, Math.floor(requestedQuantity)));
+    const targetKey = product.id || product.slug;
+
     setCart((current) => {
-      const found = current.find((line) => line.productId === product.id);
-      return found
-        ? current.map((line) => line.productId === product.id ? { ...line, quantity: Math.min(product.stock, line.quantity + quantity) } : line)
-        : [...current, { productId: product.id, quantity }];
+      const foundIdx = current.findIndex(
+        (line) => line.productId === targetKey || line.productId === product.id || line.productId === product.slug
+      );
+      if (foundIdx > -1) {
+        const updated = [...current];
+        const existing = updated[foundIdx];
+        updated[foundIdx] = {
+          ...existing,
+          productId: targetKey,
+          quantity: Math.min(product.stock, existing.quantity + quantity),
+        };
+        return updated;
+      }
+      return [...current, { productId: targetKey, quantity }];
     });
     setNotice(`${product.name} added to your shopping bag.`);
   }, []);
 
   const setQuantity = useCallback((productId: string, quantity: number) => {
-    const product = products.find((candidate) => candidate.id === productId);
+    const product = findProduct(productId);
     if (!product) return;
-    setCart((current) => current.map((line) => line.productId === productId ? { ...line, quantity: Math.min(product.stock, Math.max(1, Math.floor(quantity))) } : line));
-  }, [products]);
+    const clamped = Math.min(product.stock, Math.max(1, Math.floor(quantity)));
+    setCart((current) =>
+      current.map((line) => {
+        if (line.productId === productId || line.productId === product.id || line.productId === product.slug) {
+          return { ...line, quantity: clamped };
+        }
+        return line;
+      })
+    );
+  }, [findProduct]);
 
-  const removeFromCart = useCallback((productId: string) => setCart((current) => current.filter((line) => line.productId !== productId)), []);
+  const removeFromCart = useCallback((productId: string) => {
+    setCart((current) => {
+      const target = findProduct(productId);
+      return current.filter(
+        (line) =>
+          line.productId !== productId &&
+          (!target || (line.productId !== target.id && line.productId !== target.slug))
+      );
+    });
+  }, [findProduct]);
+
   const clearCart = useCallback(() => setCart([]), []);
 
   const toggleWishlist = useCallback((productId: string) => {
-    const removing = wishlist.includes(productId);
-    const product = products.find((candidate) => candidate.id === productId);
-    setWishlist((current) => removing ? current.filter((id) => id !== productId) : [...current, productId]);
-    setNotice(removing ? `${product?.name ?? "Item"} removed from your wishlist.` : `${product?.name ?? "Item"} saved to your wishlist.`);
-  }, [wishlist, products]);
+    const product = findProduct(productId);
+    const targetId = product ? (product.id || product.slug) : productId;
+    const removing = wishlist.some(
+      (id) => id === targetId || (product && (id === product.id || id === product.slug))
+    );
+    setWishlist((current) =>
+      removing
+        ? current.filter((id) => id !== targetId && (!product || (id !== product.id && id !== product.slug)))
+        : [...current, targetId]
+    );
+    setNotice(
+      removing
+        ? `${product?.name ?? "Item"} removed from your wishlist.`
+        : `${product?.name ?? "Item"} saved to your wishlist.`
+    );
+  }, [wishlist, findProduct]);
 
   const clearNotice = useCallback(() => setNotice(""), []);
 
-  const subtotal = useMemo(() =>
-    cart.reduce((total, line) => total + (products.find((p) => p.id === line.productId)?.price ?? 0) * line.quantity, 0),
-    [cart, products]
-  );
+  // Compute live subtotal and cartCount using flexible findProduct
+  const validCartLines = useMemo(() => {
+    return cart.map((line) => ({
+      ...line,
+      product: findProduct(line.productId),
+    })).filter((item): item is CartLine & { product: Product } => Boolean(item.product));
+  }, [cart, findProduct]);
+
+  const cartCount = useMemo(() => {
+    return validCartLines.reduce((total, line) => total + line.quantity, 0);
+  }, [validCartLines]);
+
+  const subtotal = useMemo(() => {
+    return validCartLines.reduce((total, line) => total + line.product.price * line.quantity, 0);
+  }, [validCartLines]);
 
   const value = useMemo<StoreValue>(() => ({
     cart, wishlist, ready, notice, allProducts: products,
-    cartCount: cart.reduce((total, line) => total + line.quantity, 0),
+    cartCount,
     subtotal, addToCart, setQuantity, removeFromCart, clearCart, toggleWishlist, clearNotice,
-  }), [cart, wishlist, ready, notice, products, subtotal, addToCart, setQuantity, removeFromCart, clearCart, toggleWishlist, clearNotice]);
+  }), [cart, wishlist, ready, notice, products, cartCount, subtotal, addToCart, setQuantity, removeFromCart, clearCart, toggleWishlist, clearNotice]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
