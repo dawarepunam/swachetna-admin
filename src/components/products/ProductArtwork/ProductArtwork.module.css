@@ -1,4 +1,14 @@
-.art{position:relative;isolation:isolate;display:grid;place-items:center;overflow:hidden;min-height:230px;background:linear-gradient(145deg,#f4eff9,#e5d8f0 55%,#cbb6dd)}
+.art{
+  position:relative;
+  isolation:isolate;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  width:100%;
+  aspect-ratio:1 / 1;
+  background:linear-gradient(145deg,#f4eff9,#e5d8f0 55%,#cbb6dd);
+}
 .gift{background:linear-gradient(145deg,#f7edf9,#e9d5f0 54%,#cfb1d9)}
 .bowl{background:linear-gradient(145deg,#f1ebf8,#dfd1eb 54%,#c4afd8)}
 .linen{background:linear-gradient(145deg,#f2effb,#ddd8f2 54%,#bdb7e2)}

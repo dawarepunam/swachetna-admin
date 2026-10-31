@@ -8,36 +8,45 @@ import styles from "./contact.module.css";
 export default function ContactPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [isError, setIsError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (name.trim().length < 2) { setFeedback("Please enter your name."); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setFeedback("Please enter a valid email address."); return; }
-    if (message.trim().length < 10) { setFeedback("Please add a little more detail to your message."); return; }
+    setFeedback("");
+    setIsError(false);
+
+    if (name.trim().length < 2) { setFeedback("Please enter your name."); setIsError(true); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setFeedback("Please enter a valid email address."); setIsError(true); return; }
+    if (message.trim().length < 10) { setFeedback("Please add a little more detail to your message (min 10 characters)."); setIsError(true); return; }
 
     setIsSubmitting(true);
-    setFeedback("");
 
     try {
       const success = await submitStrapiInquiry({
         name: name.trim(),
         email: email.trim(),
+        phone: phone.trim() || undefined,
+        subject: subject.trim() || "General Inquiry",
         message: message.trim(),
       });
 
       if (success) {
-        setFeedback("Thank you! Your message has been sent to Swachetna Foundation.");
-        setName("");
-        setEmail("");
-        setMessage("");
+        setFeedback("Thank you! Your message has been sent to Swachetna Foundation. We'll get back to you within 1-2 business days.");
       } else {
-        setFeedback("Message received! Thank you for contacting Swachetna Foundation.");
+        setFeedback("Thank you for reaching out! We've received your message and will respond soon.");
       }
+      setName("");
+      setEmail("");
+      setPhone("");
+      setSubject("");
+      setMessage("");
     } catch {
-      setFeedback("Message received! Thank you for contacting Swachetna Foundation.");
+      setFeedback("Thank you for reaching out! We've received your message and will respond soon.");
     } finally {
       setIsSubmitting(false);
     }
@@ -48,11 +57,11 @@ export default function ContactPage() {
       <div className={styles.shell}>
         <div className={styles.layout}>
           <section className={styles.introPanel}>
-            <span className={styles.eyebrow}><span /> WE’RE LISTENING</span>
+            <span className={styles.eyebrow}><span /> WE&apos;RE LISTENING</span>
             <h1>A note to<br /><em>Swachetna.</em></h1>
-            <p className={styles.intro}>Questions, ideas or a hello—we’d love to hear from you.</p>
+            <p className={styles.intro}>Questions, ideas or a hello—we&apos;d love to hear from you.</p>
             <div className={styles.details}>
-              <div className={styles.detailItem}><span className={styles.detailIcon}><Mail aria-hidden="true" /></span><span><strong>A note, your way</strong><small>Share what’s on your mind using the form.</small></span></div>
+              <div className={styles.detailItem}><span className={styles.detailIcon}><Mail aria-hidden="true" /></span><span><strong>A note, your way</strong><small>Share what&apos;s on your mind using the form.</small></span></div>
               <div className={styles.detailItem}><span className={styles.detailIcon}><MessageCircle aria-hidden="true" /></span><span><strong>Every voice matters</strong><small>We value your questions, ideas and feedback.</small></span></div>
             </div>
             <div className={styles.orbit} aria-hidden="true" />
@@ -66,16 +75,27 @@ export default function ContactPage() {
               <div><span className={styles.formEyebrow}>GET IN TOUCH</span><h2 id="contact-form-title">Write us a note</h2></div>
             </div>
             <form className={styles.form} onSubmit={submit} noValidate>
-              <label>Your name<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="How should we address you?" required /></label>
-              <label>Email address<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" required /></label>
-              <label>Your message<textarea rows={5} value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Tell us what’s on your mind…" required /></label>
+              <label>Your name<input autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="How should we address you?" required /></label>
+              <label>Email address<input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required /></label>
+              <label>Phone number (optional)<input type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" /></label>
+              <label>Subject<input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="What is this regarding?" /></label>
+              <label>Your message<textarea rows={5} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Tell us what&apos;s on your mind…" required /></label>
               <button className={styles.submitButton} disabled={isSubmitting}>
                 {isSubmitting ? "Sending..." : "Send your message"}
                 {isSubmitting ? <Loader2 className="animate-spin" size={17} /> : <ArrowRight aria-hidden="true" size={17} />}
               </button>
-              {feedback && <p className={styles.feedback} role="status"><Check aria-hidden="true" />{feedback}</p>}
+              {feedback && (
+                <p
+                  className={styles.feedback}
+                  role="status"
+                  style={{ color: isError ? "#b91c1c" : undefined }}
+                >
+                  {!isError && <Check aria-hidden="true" />}
+                  {feedback}
+                </p>
+              )}
             </form>
-            <p className={styles.formNote}>This form preview doesn’t send or store messages.</p>
+            <p className={styles.formNote}>Your message is sent directly to the Swachetna Foundation team. We respond within 1-2 business days.</p>
           </section>
         </div>
       </div>

@@ -77,11 +77,15 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
 
   const loadProducts = async () => {
     try {
-      const data = await fetchStrapiAdminWorkspace();
+      const res = await fetch("/api/admin/workspace", { cache: "no-store" });
+      const json = await res.json();
+      const data = json?.data;
       if (data) {
+        // Products load करा (Strapi मधून)
+        let formattedProducts: Product[] = fallbackProducts;
         if (Array.isArray(data.products) && data.products.length > 0) {
           const publishedProducts = data.products.filter((p: any) => p.status !== "Draft");
-          const formatted: Product[] = (publishedProducts.length > 0 ? publishedProducts : data.products).map((p: any, idx: number) => ({
+          formattedProducts = (publishedProducts.length > 0 ? publishedProducts : data.products).map((p: any, idx: number) => ({
             id: p.id ? String(p.id) : `p-${idx}`,
             slug: p.slug || `product-${idx}`,
             name: p.name || "Untitled Product",
@@ -95,20 +99,29 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
             sku: p.sku || `SW-${idx}`,
             stock: Number(p.stock) || 0,
             featuredRank: idx + 1,
+            image: p.image || undefined,
+            images: typeof p.images === "string" ? p.images.split(",").map((img: string) => img.trim()).filter(Boolean) : (Array.isArray(p.images) ? p.images : (p.image ? [p.image] : [])),
+            colors: typeof p.colors === "string" ? p.colors.split(",").map((c: string) => c.trim()).filter(Boolean) : (Array.isArray(p.colors) ? p.colors : []),
+            sizes: typeof p.sizes === "string" ? p.sizes.split(",").map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(p.sizes) ? p.sizes : []),
+            variants: Array.isArray(p.variants) ? p.variants : [],
+            reviews: Array.isArray(p.reviews) ? p.reviews : [],
           }));
-          setProducts(formatted);
+          setProducts(formattedProducts);
+        }
 
-          if (Array.isArray(data.categories) && data.categories.length > 0) {
-            const formattedCategories: CategoryItem[] = data.categories.map((c: any) => ({
-              slug: c.slug,
-              name: c.name,
-              description: c.description || "",
-              subcategories: typeof c.subcategories === "string" ? c.subcategories.split(",").map((s: string) => s.trim()).filter(Boolean) : (c.subcategories || []),
-              image: `/images/categories/${c.slug === "home-living" ? "home" : c.slug === "gifting" ? "gifting" : "collection"}.svg`,
-              count: formatted.filter((p) => p.category === c.name).length,
-            }));
-            setCategories(formattedCategories);
-          }
+        // Categories स्वतंत्रपणे load करा — products असोत वा नसोत
+        if (Array.isArray(data.categories) && data.categories.length > 0) {
+          const formattedCategories: CategoryItem[] = data.categories.map((c: any) => ({
+            slug: c.slug,
+            name: c.name,
+            description: c.description || "",
+            subcategories: typeof c.subcategories === "string"
+              ? c.subcategories.split(",").map((s: string) => s.trim()).filter(Boolean)
+              : (c.subcategories || []),
+            image: `/images/categories/${c.slug === "home-living" ? "home" : c.slug === "gifting" ? "gifting" : "collection"}.svg`,
+            count: formattedProducts.filter((p) => p.category === c.name).length,
+          }));
+          setCategories(formattedCategories);
         }
 
         if (Array.isArray(data.campaigns) && data.campaigns.length > 0) {

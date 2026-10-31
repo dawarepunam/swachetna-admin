@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { Activity, BookOpenText, Boxes, BriefcaseBusiness, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, FileBarChart, HeartHandshake, LayoutDashboard, LogOut, Menu, Package, Search, Settings, Shapes, ShoppingCart, Users, X } from "lucide-react";
+import { Activity, BookOpenText, Boxes, BriefcaseBusiness, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, FileBarChart, HeartHandshake, LayoutDashboard, LogOut, Mail, Menu, MessageSquare, Package, Search, Settings, Shapes, ShoppingCart, Star, Tag, Users, X } from "lucide-react";
 import { AdminDataProvider } from "./AdminData";
 import { isAdminLoggedIn, adminLogout } from "./AdminLogin";
 import styles from "./Admin.module.css";
@@ -14,6 +14,9 @@ const navigation = [
   { label: "Products", href: "/admin/products", icon: Package, group: "WORKSPACE" },
   { label: "Inventory", href: "/admin/inventory", icon: Boxes, group: "WORKSPACE" },
   { label: "Orders", href: "/admin/orders", icon: ShoppingCart, group: "WORKSPACE" },
+  { label: "Coupons & Discounts", href: "/admin/coupons", icon: Tag, group: "WORKSPACE" },
+  { label: "Customer Reviews", href: "/admin/reviews", icon: Star, group: "WORKSPACE" },
+  { label: "Inquiries", href: "/admin/inquiries", icon: Mail, group: "WORKSPACE" },
   { label: "Customers", href: "/admin/customers", icon: Users, group: "WORKSPACE" },
   { label: "Categories", href: "/admin/categories", icon: Shapes, group: "WORKSPACE" },
   { label: "Reports", href: "/admin/reports", icon: FileBarChart, group: "INSIGHTS" },
@@ -21,7 +24,7 @@ const navigation = [
   { label: "Campaigns", href: "/admin/campaigns", icon: HeartHandshake, group: "FOUNDATION" },
   { label: "Settings", href: "/admin/settings", icon: Settings, group: "PREFERENCES" },
 ];
-const pageNames: Record<string, string> = { "/admin/dashboard": "Overview", "/admin/products": "Products", "/admin/inventory": "Inventory", "/admin/orders": "Orders", "/admin/customers": "Customers", "/admin/categories": "Categories", "/admin/reports": "Reports", "/admin/content": "Website content", "/admin/campaigns": "Campaigns", "/admin/settings": "Settings" };
+const pageNames: Record<string, string> = { "/admin/dashboard": "Overview", "/admin/products": "Products", "/admin/inventory": "Inventory", "/admin/orders": "Orders", "/admin/coupons": "Coupons & Discounts", "/admin/reviews": "Customer Reviews", "/admin/inquiries": "Inquiries", "/admin/customers": "Customers", "/admin/categories": "Categories", "/admin/reports": "Reports", "/admin/content": "Website content", "/admin/campaigns": "Campaigns", "/admin/settings": "Settings" };
 
 export default function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();

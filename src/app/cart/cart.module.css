@@ -78,26 +78,41 @@
 }
 
 @media (max-width: 520px) {
-  .page { padding: 23px 0 65px; }
-  .crumb { font-size: 8px; }
-  .crumb a { min-height: 34px; padding-inline: 10px; }
-  .heading { margin-top: 17px; padding: 27px 22px; border-radius: 20px; }
-  .heading h1 { margin-top: 16px; font-size: clamp(40px, 11vw, 54px); }
-  .layout { gap: 14px; margin-top: 17px; }
-  .lines { padding: 0 13px; border-radius: 17px; }
-  .lineHead { min-height: 55px; font-size: 11px; }
-  .line { grid-template-columns: 78px minmax(0,1fr); gap: 11px; padding: 15px 0; }
-  .art { border-radius: 10px; }
-  .art > div { min-height: 94px; }
-  .details h2 { font-size: 15px; }
-  .details p { font-size: 10px; }
-  .linePrice { grid-column: 2; margin-top: -5px; }
-  .controls { margin-top: 10px; }
-  .quantity { min-height: 33px; gap: 8px; }
-  .remove { padding-inline: 6px; }
-  .summary { padding: 19px; border-radius: 17px; }
-  .empty { padding: 52px 16px; border-radius: 17px; }
-  .empty h2 { font-size: 22px; }
+  .page { padding: 18px 0 60px; }
+  .crumb { font-size: 8px; flex-wrap: wrap; }
+  .crumb a { min-height: 32px; padding-inline: 10px; font-size: 10px; }
+  .heading { margin-top: 14px; padding: 22px 18px; border-radius: 18px; }
+  .heading h1 { margin-top: 12px; font-size: clamp(32px, 9vw, 44px); }
+  .layout { gap: 14px; margin-top: 16px; }
+  .lines { padding: 0 12px; border-radius: 16px; }
+  .lineHead { min-height: 50px; font-size: 11px; }
+  .line { 
+    grid-template-columns: 80px minmax(0, 1fr); 
+    grid-template-rows: auto auto;
+    gap: 12px; 
+    padding: 14px 0; 
+  }
+  .art { border-radius: 10px; grid-row: 1 / span 2; }
+  .art > div { min-height: 85px; }
+  .details h2 { font-size: 14px; }
+  .details p { font-size: 10px; margin-top: 4px; }
+  .linePrice { 
+    margin-top: 4px; 
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .controls { 
+    margin-top: 8px; 
+    flex-wrap: wrap; 
+    gap: 8px;
+  }
+  .quantity { min-height: 30px; gap: 6px; padding: 2px 5px; }
+  .quantity button { width: 22px; height: 24px; }
+  .remove { padding-inline: 6px; min-height: 28px; font-size: 9px; }
+  .summary { padding: 16px; border-radius: 16px; }
+  .summary h2 { font-size: 20px; margin: 8px 0 16px; }
+  .empty { padding: 40px 16px; border-radius: 16px; }
+  .empty h2 { font-size: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

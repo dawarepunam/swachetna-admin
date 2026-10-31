@@ -1,1 +1,453 @@
-.page{min-height:65vh;padding:65px 0 95px}.eyebrow{color:#897493;font-size:10px;font-weight:700;letter-spacing:.15em}.page h1{margin-top:11px;color:#3c3044;font-size:clamp(42px,6vw,67px)}.page h1 em{color:#8a7195}.page>div>p{margin-top:11px;color:#817785;font-size:13px}.count{margin:26px 0 18px;padding-bottom:14px;border-bottom:1px solid var(--color-border);color:#897e8d;font-size:11px}
+.page {
+  min-height: 75vh;
+  padding: 32px 0 90px;
+  background: #fdfcfd;
+}
+
+/* Amazon / Nykaa Breadcrumb */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+  color: #7b6b85;
+  margin-bottom: 22px;
+}
+
+.breadcrumb a {
+  color: #654e76;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.breadcrumb a:hover {
+  color: #3d2350;
+  text-decoration: underline;
+}
+
+.crumbSep {
+  color: #bfaec9;
+}
+
+.crumbActive {
+  color: #3b2c45;
+  font-weight: 600;
+}
+
+.crumbSubActive {
+  color: #7652c8;
+  font-weight: 700;
+}
+
+/* Header */
+.header {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #ebdfee;
+  padding-bottom: 24px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #7652c8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.sparkleIcon {
+  color: #f59e0b;
+}
+
+.header h1 {
+  margin-top: 6px;
+  color: #2b1f34;
+  font-size: clamp(30px, 5vw, 48px);
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.header h1 em {
+  color: #7a588f;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.desc {
+  margin-top: 10px;
+  color: #6c5f74;
+  font-size: 15px;
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+/* Nykaa / Myntra Visual Sub-Category Circles */
+.visualCirclesSection {
+  margin: 28px 0 36px;
+  padding: 22px 24px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #ebdfee;
+  box-shadow: 0 4px 20px rgba(78, 48, 92, 0.04);
+}
+
+.circlesHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.circlesHeader span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #715286;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.circlesHeader small {
+  font-size: 12px;
+  color: #92839c;
+}
+
+.circlesRow {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #ebdfee transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.circlesRow::-webkit-scrollbar {
+  height: 5px;
+}
+
+.circlesRow::-webkit-scrollbar-thumb {
+  background: #ebdfee;
+  border-radius: 10px;
+}
+
+.circleCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 105px;
+  max-width: 125px;
+  padding: 12px 10px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.circleCard:hover {
+  background: #faf6fc;
+  transform: translateY(-3px);
+  border-color: #e5d7eb;
+}
+
+.activeCircle {
+  background: #f7effb !important;
+  border-color: #bd9ccf !important;
+  box-shadow: 0 6px 16px rgba(118, 82, 200, 0.12);
+}
+
+.circleAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #f2e9f7;
+  color: #5c456c;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(92, 69, 108, 0.08);
+  transition: transform 0.2s ease;
+  overflow: hidden;
+  border: 2px solid #ebdfee;
+}
+
+.circleImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.circleFallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.circleCard:hover .circleAvatar {
+  transform: scale(1.06);
+}
+
+.activeCircle .circleAvatar {
+  background: #5c456c;
+  color: #ffffff;
+}
+
+.avatarBg0 { background: #fee8d6; color: #a34e12; }
+.avatarBg1 { background: #e3f5e9; color: #1e783d; }
+.avatarBg2 { background: #e6edf9; color: #21549c; }
+.avatarBg3 { background: #fae4ed; color: #a1245b; }
+
+.circleAvatar span {
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.circleTitle {
+  font-size: 13px;
+  color: #3b2c45;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.circleCount {
+  font-size: 11px;
+  color: #92839c;
+}
+
+.activeCircle .circleTitle {
+  color: #5c456c;
+  font-weight: 700;
+}
+
+/* Filter Bar when subcategory selected */
+.filterBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  margin-bottom: 28px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #ebdfee;
+}
+
+.filterBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.filterBarLeft span {
+  color: #897894;
+}
+
+.filterBarLeft strong {
+  color: #35253e;
+}
+
+.filterBarLeft small {
+  color: #9f90a9;
+  font-size: 12px;
+}
+
+.clearBtn {
+  font-size: 12px;
+  color: #7652c8;
+  background: none;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.clearBtn:hover {
+  background: #f5eff9;
+}
+
+/* Amazon / Nykaa Section Blocks */
+.sectionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 52px;
+}
+
+.sectionBlock {
+  background: #ffffff;
+  border: 1px solid #ebdfee;
+  border-radius: 20px;
+  padding: 28px 24px 34px;
+  box-shadow: 0 4px 24px rgba(78, 48, 92, 0.03);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f2e9f6;
+}
+
+.sectionTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionHeader h2 {
+  font-size: clamp(20px, 3.5vw, 26px);
+  color: #2f2238;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.sectionBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #715286;
+  background: #ebdfee;
+  padding: 3px 9px;
+  border-radius: 99px;
+}
+
+.viewSectionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5c456c;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 99px;
+  transition: all 0.18s ease;
+}
+
+.viewSectionBtn:hover {
+  background: #f7effb;
+  color: #3b2847;
+  transform: translateX(2px);
+}
+
+.singleSectionGrid {
+  margin-top: 10px;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  background: #ffffff;
+  border: 1px dashed #ebdfee;
+  border-radius: 20px;
+  margin-top: 10px;
+}
+
+.emptyIcon {
+  color: #b5a3be;
+  margin-bottom: 16px;
+}
+
+.emptyState h3 {
+  font-size: 18px;
+  color: #3b2c45;
+  margin-bottom: 8px;
+}
+
+.emptyState p {
+  color: #796c82;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.viewAllBtn {
+  padding: 10px 20px;
+  border-radius: 99px;
+  background: #5c456c;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.viewAllBtn:hover {
+  background: #463353;
+}
+
+/* Responsive Breakpoints (iPhone, Android, Tablets, iPads, Desktops) */
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 0 60px;
+  }
+  .visualCirclesSection {
+    padding: 16px;
+    margin: 20px 0 28px;
+    border-radius: 16px;
+  }
+  .circleAvatar {
+    width: 50px;
+    height: 50px;
+  }
+  .circleCard {
+    min-width: 90px;
+    max-width: 105px;
+    padding: 8px 6px;
+  }
+  .circleTitle {
+    font-size: 12px;
+  }
+  .sectionBlock {
+    padding: 20px 14px 24px;
+    border-radius: 16px;
+  }
+  .sectionsContainer {
+    gap: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header h1 {
+    font-size: 26px;
+  }
+  .circlesHeader {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .viewSectionBtn {
+    padding: 4px 0;
+  }
+}

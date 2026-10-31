@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useProducts } from "../../../context/ProductsContext";
 import ProductGrid from "../ProductGrid/ProductGrid";
@@ -11,20 +11,57 @@ export default function CatalogBrowser({ mode = "shop", initialQuery = "" }: { m
   const { products, categories } = useProducts();
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState("All");
+  const [subcategory, setSubcategory] = useState("All");
   const [minimum, setMinimum] = useState("");
   const [maximum, setMaximum] = useState("");
   const [sort, setSort] = useState("featured");
   const [limit, setLimit] = useState(6);
   const [mobileFilters, setMobileFilters] = useState(false);
 
+  // Sync with URL query parameter ?q= if on search page
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlQ = new URLSearchParams(window.location.search).get("q");
+      if (urlQ) {
+        setQuery(urlQ);
+      }
+    }
+  }, []);
+
+  // Active category's available subcategories
+  const activeCategoryObj = useMemo(() => {
+    if (category === "All") return null;
+    return categories.find((c) => c.name === category);
+  }, [categories, category]);
+
+  const activeSubcategories = useMemo(() => {
+    if (!activeCategoryObj) return [];
+    if (Array.isArray(activeCategoryObj.subcategories) && activeCategoryObj.subcategories.length > 0) {
+      return activeCategoryObj.subcategories;
+    }
+    // Also extract from products in this category if any
+    const fromProducts = Array.from(
+      new Set(
+        products
+          .filter((p) => p.category === category)
+          .map((p) => (p as any).subcategory?.trim())
+          .filter(Boolean)
+      )
+    );
+    return fromProducts as string[];
+  }, [activeCategoryObj, products, category]);
+
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
     const list = products.filter((product) => {
-      const searchableText = `${product.name} ${product.category} ${product.shortDescription} ${product.description}`.toLowerCase();
-      return searchableText.includes(term)
-        && (category === "All" || product.category === category)
-        && (!minimum || product.price >= Number(minimum))
-        && (!maximum || product.price <= Number(maximum));
+      const colorsText = Array.isArray((product as any).colors) ? (product as any).colors.join(" ") : ((product as any).colors || "");
+      const searchableText = `${product.name} ${product.category} ${(product as any).subcategory || ""} ${product.sku || ""} ${colorsText} ${product.shortDescription || ""} ${product.description || ""}`.toLowerCase();
+      const matchQuery = searchableText.includes(term);
+      const matchCat = category === "All" || product.category === category;
+      const matchSub = subcategory === "All" || (product as any).subcategory?.trim().toLowerCase() === subcategory.trim().toLowerCase();
+      const matchMin = !minimum || product.price >= Number(minimum);
+      const matchMax = !maximum || product.price <= Number(maximum);
+      return matchQuery && matchCat && matchSub && matchMin && matchMax;
     });
     return [...list].sort((a, b) => sort === "price-low"
       ? a.price - b.price
@@ -33,11 +70,12 @@ export default function CatalogBrowser({ mode = "shop", initialQuery = "" }: { m
         : sort === "name"
           ? a.name.localeCompare(b.name)
           : a.featuredRank - b.featuredRank);
-  }, [query, category, minimum, maximum, sort]);
+  }, [query, category, subcategory, minimum, maximum, sort, products]);
 
   const reset = () => {
     setQuery("");
     setCategory("All");
+    setSubcategory("All");
     setMinimum("");
     setMaximum("");
     setSort("featured");
@@ -45,6 +83,7 @@ export default function CatalogBrowser({ mode = "shop", initialQuery = "" }: { m
   };
   const setCategoryFilter = (value: string) => {
     setCategory(value);
+    setSubcategory("All");
     setLimit(6);
   };
   const filters = <>
@@ -57,12 +96,52 @@ export default function CatalogBrowser({ mode = "shop", initialQuery = "" }: { m
     </label>
     <fieldset>
       <legend>Collections</legend>
-      <button type="button" className={category === "All" ? styles.selected : ""} aria-pressed={category === "All"} onClick={() => setCategoryFilter("All")}>
-        All products <span>{products.length}</span>
+      <button type="button" className={`${styles.categoryBtn} ${category === "All" ? styles.selected : ""}`} aria-pressed={category === "All"} onClick={() => setCategoryFilter("All")}>
+        <span className={styles.catName}>All Products</span>
+        <span className={styles.catBadge}>{products.length}</span>
       </button>
-      {categories.map((item) => <button type="button" key={item.slug} className={category === item.name ? styles.selected : ""} aria-pressed={category === item.name} onClick={() => setCategoryFilter(item.name)}>
-        {item.name}<span>{item.count}</span>
-      </button>)}
+      {categories.map((item) => (
+        <div key={item.slug} className={styles.categoryGroup}>
+          <button
+            type="button"
+            className={`${styles.categoryBtn} ${category === item.name ? styles.selected : ""}`}
+            aria-pressed={category === item.name}
+            onClick={() => setCategoryFilter(item.name)}
+          >
+            <span className={styles.catName}>{item.name}</span>
+            <span className={styles.catBadge}>{item.count}</span>
+          </button>
+          {category === item.name && activeSubcategories.length > 0 && (
+            <div className={styles.subcategorySublist}>
+              <button
+                type="button"
+                className={`${styles.subcatItem} ${subcategory === "All" ? styles.activeSubcat : ""}`}
+                onClick={() => { setSubcategory("All"); setLimit(6); }}
+              >
+                <span className={styles.subcatBullet}>•</span>
+                <span className={styles.subcatTitle}>All in {item.name}</span>
+              </button>
+              {activeSubcategories.map((sub) => {
+                const subCount = products.filter(
+                  (p) => p.category === item.name && (p as any).subcategory?.trim().toLowerCase() === sub.trim().toLowerCase()
+                ).length;
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    className={`${styles.subcatItem} ${subcategory === sub ? styles.activeSubcat : ""}`}
+                    onClick={() => { setSubcategory(sub); setLimit(6); }}
+                  >
+                    <span className={styles.subcatBullet}>•</span>
+                    <span className={styles.subcatTitle}>{sub}</span>
+                    <span className={styles.subcatCountBadge}>{subCount}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ))}
     </fieldset>
     <fieldset>
       <legend>Price range</legend>
@@ -82,7 +161,7 @@ export default function CatalogBrowser({ mode = "shop", initialQuery = "" }: { m
         <label>Sort by<select value={sort} onChange={(event) => { setSort(event.target.value); setLimit(6); }}><option value="featured">Featured</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="name">Name</option></select></label>
       </div>
     </div>
-    {active && <div className={styles.active} aria-label="Active filters"><span>Active filters</span>{category !== "All" && <button type="button" onClick={() => setCategoryFilter("All")}>{category}<X size={13} /></button>}{query && <button type="button" onClick={() => { setQuery(""); setLimit(6); }}>“{query}”<X size={13} /></button>}{(minimum || maximum) && <button type="button" onClick={() => { setMinimum(""); setMaximum(""); setLimit(6); }}>Price<X size={13} /></button>}<button type="button" className={styles.clear} onClick={reset}>Clear all</button></div>}
+    {active && <div className={styles.active} aria-label="Active filters"><span>Active filters</span>{category !== "All" && <button type="button" onClick={() => setCategoryFilter("All")}>{category}<X size={13} /></button>}{subcategory !== "All" && <button type="button" onClick={() => setSubcategory("All")}>Sub: {subcategory}<X size={13} /></button>}{query && <button type="button" onClick={() => { setQuery(""); setLimit(6); }}>“{query}”<X size={13} /></button>}{(minimum || maximum) && <button type="button" onClick={() => { setMinimum(""); setMaximum(""); setLimit(6); }}>Price<X size={13} /></button>}<button type="button" className={styles.clear} onClick={reset}>Clear all</button></div>}
     <div className={`${styles.layout} ${mobileFilters ? styles.filtersOpen : ""}`}>
       <aside id="catalog-filters" className={styles.sidebar} aria-label="Product filters">
         <div className={styles.sidebarHead}>Filter <button type="button" onClick={() => setMobileFilters(false)} aria-label="Close filters"><X size={17} /></button></div>

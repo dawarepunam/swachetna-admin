@@ -33,7 +33,7 @@ function readSavedStore(): { cart: CartLine[]; wishlist: string[] } {
     const cart = Array.isArray(saved.cart) ? saved.cart.filter((line): line is CartLine =>
       line && typeof line === "object" && typeof (line as CartLine).productId === "string" && typeof (line as CartLine).quantity === "number"
     ) : [];
-    const wishlist = Array.isArray(saved.wishlist) ? saved.wishlist.filter((id): id is string => typeof id === "string") : [];
+    const wishlist = Array.isArray(saved.wishlist) ? saved.wishlist.filter((id): id is string => typeof id === "string" && id.trim().length > 0) : [];
     return { cart, wishlist: [...new Set(wishlist)] };
   } catch {
     try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }

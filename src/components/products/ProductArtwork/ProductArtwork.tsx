@@ -2,6 +2,24 @@ import type { Product } from "../../../types/product";
 import styles from "./ProductArtwork.module.css";
 
 export default function ProductArtwork({ product, large = false }: { product: Product; large?: boolean }) {
+  if (product.image) {
+    return (
+      <div className={`${styles.art} ${large ? styles.large : ""}`} style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+        <img
+          src={product.image}
+          alt={product.name}
+          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s ease" }}
+          loading="lazy"
+        />
+        {product.subcategory ? (
+          <span className={styles.artLabel}>{product.subcategory}</span>
+        ) : (
+          <span className={styles.artLabel}>{product.category}</span>
+        )}
+      </div>
+    );
+  }
+
   const isGift = product.category === "Gifting";
   const isSet = product.slug.includes("set") || product.slug.includes("collection");
   const isBowl = product.slug.includes("bowl");

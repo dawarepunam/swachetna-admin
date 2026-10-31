@@ -162,6 +162,119 @@
   color: #fff;
 }
 
+.navMainLink {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: #3b2848;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.mobileCategorySection {
+  margin: 6px 0;
+  border: 1px solid rgba(133, 69, 177, 0.12);
+  border-radius: 16px;
+  background: #fbf7fd;
+  padding: 8px 12px;
+}
+
+.mobileCatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobileCatList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-left: 8px;
+}
+
+.mobileCatItem {
+  border-bottom: 1px dashed rgba(133, 69, 177, 0.1);
+  padding-bottom: 6px;
+}
+
+.mobileCatItem:last-child {
+  border-bottom: none;
+}
+
+.mobileCatRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobileCatTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b345b;
+  text-decoration: none;
+  padding: 6px 0;
+  flex: 1;
+}
+
+.mobileExpandBtn {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: #7b4ea3;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.mobileExpandBtn:hover {
+  background: rgba(133, 69, 177, 0.08);
+}
+
+.mobileSubList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0 6px 14px;
+  border-left: 2px solid #e1d0eb;
+  margin: 4px 0 6px 4px;
+}
+
+.mobileSubLinkAll {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7652c8;
+  text-decoration: none;
+  padding: 4px 0;
+}
+
+.mobileSubLink {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #634f73;
+  text-decoration: none;
+  padding: 4px 0;
+}
+
+.mobileSubLink small {
+  font-size: 10px;
+  background: rgba(133, 69, 177, 0.1);
+  padding: 1px 6px;
+  border-radius: 99px;
+  color: #634f73;
+}
+
 .bottom {
   margin-top: auto;
 
@@ -186,7 +299,120 @@
   .links { gap: 2px; margin-block: 9px; }
   .links a { min-height: 42px; }
   .links a span { width: 28px; height: 28px; }
-  .bottom { padding: 10px 12px; }
+  .navMainLink {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: #3b2848;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.mobileCategorySection {
+  margin: 6px 0;
+  border: 1px solid rgba(133, 69, 177, 0.12);
+  border-radius: 16px;
+  background: #fbf7fd;
+  padding: 8px 12px;
+}
+
+.mobileCatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobileCatList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-left: 8px;
+}
+
+.mobileCatItem {
+  border-bottom: 1px dashed rgba(133, 69, 177, 0.1);
+  padding-bottom: 6px;
+}
+
+.mobileCatItem:last-child {
+  border-bottom: none;
+}
+
+.mobileCatRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobileCatTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b345b;
+  text-decoration: none;
+  padding: 6px 0;
+  flex: 1;
+}
+
+.mobileExpandBtn {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: #7b4ea3;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.mobileExpandBtn:hover {
+  background: rgba(133, 69, 177, 0.08);
+}
+
+.mobileSubList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0 6px 14px;
+  border-left: 2px solid #e1d0eb;
+  margin: 4px 0 6px 4px;
+}
+
+.mobileSubLinkAll {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7652c8;
+  text-decoration: none;
+  padding: 4px 0;
+}
+
+.mobileSubLink {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #634f73;
+  text-decoration: none;
+  padding: 4px 0;
+}
+
+.mobileSubLink small {
+  font-size: 10px;
+  background: rgba(133, 69, 177, 0.1);
+  padding: 1px 6px;
+  border-radius: 99px;
+  color: #634f73;
+}
+
+.bottom { padding: 10px 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

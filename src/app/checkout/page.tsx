@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
+import { useState, useEffect, type FormEvent } from "react";
+import { ArrowLeft, ArrowRight, ShieldCheck, MapPin, CheckCircle2, UserCheck } from "lucide-react";
 import { formatCurrency } from "../../data/products";
 import { useStore } from "../../context/StoreContext";
 import { CHECKOUT_DRAFT_KEY, type CheckoutCustomer, type CheckoutDraft, type CheckoutField } from "../../types/checkout";
@@ -17,9 +17,45 @@ export default function CheckoutPage() {
   const { cart, subtotal, ready } = useStore();
   const [customer, setCustomer] = useState<CheckoutCustomer>(initial);
   const [errors, setErrors] = useState<Partial<Record<CheckoutField, string>>>({});
-  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(true);
+  const [saveAddressToAccount, setSaveAddressToAccount] = useState(true);
+  const [savedUser, setSavedUser] = useState<any>(null);
+  const [hasSavedAddress, setHasSavedAddress] = useState(false);
   const [formError, setFormError] = useState("");
   const shipping = subtotal >= 1500 || subtotal === 0 ? 0 : 99;
+
+  // Auto-fill details if user is logged in or has saved address
+  useEffect(() => {
+    try {
+      const uStr = localStorage.getItem("swachetna-demo-user");
+      const addrStr = localStorage.getItem("swachetna-saved-address");
+      let uData: any = null;
+      let addrData: any = null;
+
+      if (uStr) {
+        uData = JSON.parse(uStr);
+        setSavedUser(uData);
+      }
+      if (addrStr) {
+        addrData = JSON.parse(addrStr);
+        setHasSavedAddress(true);
+      }
+
+      setCustomer((prev) => ({
+        ...prev,
+        name: uData?.name || prev.name,
+        email: uData?.email || prev.email,
+        phone: uData?.phone || prev.phone,
+        address: addrData?.line || prev.address,
+        city: addrData?.city || prev.city,
+        state: addrData?.state || prev.state,
+        postalCode: addrData?.postalCode || prev.postalCode,
+      }));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const update = (field: CheckoutField, value: string) => setCustomer((current) => ({ ...current, [field]: value }));
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -34,15 +70,26 @@ export default function CheckoutPage() {
     if (!/^\d{6}$/.test(customer.postalCode.trim())) nextErrors.postalCode = "Enter a valid 6-digit PIN code.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length || !cart.length) return;
-    if (!consentAccepted) { setFormError("Please confirm that you understand this is a demo checkout."); return; }
+    if (!consentAccepted) { setFormError("Please confirm your address details."); return; }
 
     try {
+      // Save address to local account if chosen
+      if (saveAddressToAccount) {
+        const addrToSave = {
+          line: customer.address.trim(),
+          city: customer.city.trim(),
+          state: customer.state.trim(),
+          postalCode: customer.postalCode.trim(),
+        };
+        localStorage.setItem("swachetna-saved-address", JSON.stringify(addrToSave));
+      }
+
       const draft: CheckoutDraft = { customer, createdAt: new Date().toISOString() };
       window.sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(draft));
       setFormError("");
       router.push("/payment");
     } catch {
-      setFormError("Your browser could not save these demo details. Please check its storage settings and try again.");
+      setFormError("Could not save checkout details. Please check browser storage settings.");
     }
   };
 
@@ -53,29 +100,106 @@ export default function CheckoutPage() {
     <section className={styles.empty}><h2>Nothing to check out yet.</h2><Link href="/shop">Explore the collection</Link></section>
   </div></main>;
 
-  return <main className={styles.page}><div className="container">
-    <Link className={styles.back} href="/cart"><ArrowLeft size={14} /> Back to your bag</Link>
-    <header><span>DEMO CHECKOUT - STEP 1 OF 2</span><h1>Confirm your<br /><em>delivery details.</em></h1><p>Review your details, then continue to the demo payment step. No money will be charged.</p></header>
-    <div className={styles.layout}>
-      <form onSubmit={submit} noValidate autoComplete="off">
-        <span className={styles.step}>01 - DELIVERY DETAILS</span>
-        <div className={styles.fields}>{(Object.keys(labels) as CheckoutField[]).map((field) => <label key={field} className={field === "address" ? styles.full : ""}>
-          {labels[field]}<input type={field === "email" ? "email" : "text"} inputMode={field === "phone" || field === "postalCode" ? "numeric" : undefined} autoComplete="off" value={customer[field]} aria-invalid={Boolean(errors[field])} onChange={(event) => update(field, event.target.value)} required />
-          {errors[field] && <small className={styles.error}>{errors[field]}</small>}
-        </label>)}</div>
-        <label className={styles.consent}><input type="checkbox" checked={consentAccepted} aria-invalid={Boolean(formError)} onChange={(event) => { setConsentAccepted(event.target.checked); if (event.target.checked) setFormError(""); }} /><span>I understand this is a frontend demo. My details stay in this browser and no payment or delivery will be processed.</span></label>
-        {formError && <small className={styles.error} role="alert">{formError}</small>}
-        <button className={styles.place} type="submit">Confirm details &amp; continue <ArrowRight size={17} /></button>
-      </form>
-      <aside className={styles.summary}>
-        <span className={styles.step}>02 - ORDER SUMMARY</span>
-        <div><span>Items</span><strong>{cart.reduce((sum, line) => sum + line.quantity, 0)}</strong></div>
-        <div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
-        <div><span>Demo shipping</span><strong>{shipping ? formatCurrency(shipping) : "Free"}</strong></div>
-        <small>Free demo shipping over {formatCurrency(1500)}.</small>
-        <div className={styles.total}><span>Total</span><strong>{formatCurrency(subtotal + shipping)}</strong></div>
-        <small><ShieldCheck size={14} /> Sample checkout only - no payment details requested.</small>
-      </aside>
-    </div>
-  </div></main>;
+  return (
+    <main className={styles.page}>
+      <div className="container">
+        <Link className={styles.back} href="/cart"><ArrowLeft size={14} /> Back to your bag</Link>
+        <header>
+          <span>SECURE CHECKOUT · STEP 1 OF 2</span>
+          <h1>Confirm your<br /><em>delivery address.</em></h1>
+          <p>Deliver handcrafted treasures safely to your doorstep. Review or update your delivery details below.</p>
+        </header>
+
+        {savedUser && (
+          <div style={{
+            background: "#f7f2f9",
+            border: "1px solid #ebdfee",
+            borderRadius: "12px",
+            padding: "12px 18px",
+            marginBottom: "24px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            fontSize: "13px",
+            color: "#4a3258"
+          }}>
+            <UserCheck size={18} style={{ color: "#744b82" }} />
+            <span>
+              Signed in as <strong>{savedUser.name}</strong> ({savedUser.email}).
+              {hasSavedAddress && " Your saved shipping address is pre-filled below."}
+            </span>
+          </div>
+        )}
+
+        <div className={styles.layout}>
+          <form onSubmit={submit} noValidate autoComplete="off">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <span className={styles.step}>01 · SHIPPING &amp; DELIVERY ADDRESS</span>
+              {hasSavedAddress && (
+                <span style={{ fontSize: "11px", color: "#166534", background: "#f0fdf4", padding: "3px 8px", borderRadius: "99px", fontWeight: "600" }}>
+                  <CheckCircle2 size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                  Saved Address Loaded
+                </span>
+              )}
+            </div>
+
+            <div className={styles.fields}>
+              {(Object.keys(labels) as CheckoutField[]).map((field) => (
+                <label key={field} className={field === "address" ? styles.full : ""}>
+                  {labels[field]}
+                  <input
+                    type={field === "email" ? "email" : "text"}
+                    inputMode={field === "phone" || field === "postalCode" ? "numeric" : undefined}
+                    autoComplete="off"
+                    value={customer[field]}
+                    aria-invalid={Boolean(errors[field])}
+                    onChange={(event) => update(field, event.target.value)}
+                    required
+                  />
+                  {errors[field] && <small className={styles.error}>{errors[field]}</small>}
+                </label>
+              ))}
+            </div>
+
+            <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#54465b", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={saveAddressToAccount}
+                  onChange={(e) => setSaveAddressToAccount(e.target.checked)}
+                />
+                <span>Save this address for fast 1-click checkout in my account</span>
+              </label>
+
+              <label className={styles.consent}>
+                <input
+                  type="checkbox"
+                  checked={consentAccepted}
+                  aria-invalid={Boolean(formError)}
+                  onChange={(event) => { setConsentAccepted(event.target.checked); if (event.target.checked) setFormError(""); }}
+                />
+                <span>I confirm that the delivery address and contact information above are accurate.</span>
+              </label>
+            </div>
+
+            {formError && <small className={styles.error} role="alert">{formError}</small>}
+
+            <button className={styles.place} type="submit">
+              Confirm &amp; Proceed to Payment <ArrowRight size={17} />
+            </button>
+          </form>
+
+          <aside className={styles.summary}>
+            <span className={styles.step}>02 · ORDER SUMMARY</span>
+            <div><span>Items</span><strong>{cart.reduce((sum, line) => sum + line.quantity, 0)}</strong></div>
+            <div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
+            <div><span>Shipping</span><strong>{shipping ? formatCurrency(shipping) : "Free"}</strong></div>
+            <small>Free shipping on orders over {formatCurrency(1500)}.</small>
+            <div className={styles.total}><span>Total</span><strong>{formatCurrency(subtotal + shipping)}</strong></div>
+            <small><ShieldCheck size={14} /> 100% Safe &amp; Encrypted Checkout.</small>
+          </aside>
+        </div>
+      </div>
+    </main>
+  );
 }

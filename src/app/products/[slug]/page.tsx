@@ -11,6 +11,9 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
     if (data && Array.isArray(data.products)) {
       const match = data.products.find((p: any) => p.slug === slug);
       if (match) {
+        if (match.status === "Draft") {
+          return null;
+        }
         return {
           id: match.id ? String(match.id) : match.slug,
           slug: match.slug,
@@ -24,6 +27,12 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
           sku: match.sku || `SW-${match.slug}`,
           stock: Number(match.stock) || 0,
           featuredRank: 1,
+          image: match.image || undefined,
+          images: Array.isArray(match.images) ? match.images : (typeof match.images === "string" ? match.images.split(",").map((i: string) => i.trim()).filter(Boolean) : undefined),
+          colors: typeof match.colors === "string" ? match.colors.split(",").map((c: string) => c.trim()).filter(Boolean) : (Array.isArray(match.colors) ? match.colors : []),
+          sizes: typeof match.sizes === "string" ? match.sizes.split(",").map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(match.sizes) ? match.sizes : []),
+          variants: Array.isArray(match.variants) ? match.variants : [],
+          reviews: Array.isArray(match.reviews) ? match.reviews : [],
         };
       }
     }

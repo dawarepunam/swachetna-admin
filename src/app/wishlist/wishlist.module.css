@@ -44,16 +44,16 @@
 .empty a:hover { transform: translateY(-2px); background: linear-gradient(105deg, #493055, #68417d); box-shadow: 0 13px 25px rgba(85, 47, 107, .24); }
 
 @media (max-width: 700px) {
-  .page { padding: 35px 0 65px; }
-  .heading { align-items: flex-start; flex-direction: column; gap: 11px; margin-bottom: 24px; }
-  .page h1 { margin-top: 11px; font-size: clamp(42px, 11vw, 56px); }
-  .intro { max-width: 390px; margin: 0; font-size: 11px; }
-  .empty { min-height: 320px; padding: 40px 18px; border-radius: 22px; }
-  .empty > svg { width: 25px; height: 25px; padding: 16px; border-radius: 18px; }
-  .emptyLabel { margin-top: 17px; font-size: 7px; }
-  .empty h2 { margin-top: 9px; font-size: 25px; }
-  .empty p { max-width: 300px; margin-top: 8px; font-size: 11px; }
-  .empty a { min-height: 46px; margin-top: 20px; }
+  .page { padding: 25px 0 60px; }
+  .heading { align-items: flex-start; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .page h1 { margin-top: 8px; font-size: clamp(34px, 9vw, 48px); }
+  .intro { max-width: 100%; margin: 0; font-size: 12px; }
+  .empty { min-height: 280px; padding: 32px 16px; border-radius: 20px; }
+  .empty > svg { width: 24px; height: 24px; padding: 14px; border-radius: 16px; }
+  .emptyLabel { margin-top: 14px; font-size: 8px; }
+  .empty h2 { margin-top: 8px; font-size: 22px; }
+  .empty p { max-width: 320px; margin-top: 8px; font-size: 12px; }
+  .empty a { min-height: 44px; margin-top: 18px; font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) { .empty a { transition: none; } }

@@ -2,7 +2,7 @@ const STRAPI_BASE_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:
 
 export async function fetchStrapiAdminWorkspace() {
   try {
-    const res = await fetch(`${STRAPI_BASE_URL}/api/admin?populate=*`, {
+    const res = await fetch(`${STRAPI_BASE_URL}/api/admin?populate[products]=*&populate[categories]=*&populate[campaigns]=*&populate[content]=*&populate[settings]=*&populate[orders]=*&populate[inquiries]=*&populate[coupons]=*`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -34,7 +34,8 @@ export async function updateStrapiAdminWorkspace(payload: Record<string, unknown
     });
 
     if (!res.ok) {
-      console.error("Failed to update Strapi Admin:", res.statusText);
+      const errText = await res.text();
+      console.error("Failed to update Strapi Admin:", res.status, errText);
       return false;
     }
 
@@ -50,6 +51,7 @@ export async function submitStrapiOrder(newOrder: {
   customer: string;
   customerEmail?: string;
   customerPhone?: string;
+  customerAddress?: string;
   total: number;
   paymentMethod?: string;
   items?: unknown;
@@ -64,6 +66,7 @@ export async function submitStrapiOrder(newOrder: {
       customer: newOrder.customer,
       customerEmail: newOrder.customerEmail || "",
       customerPhone: newOrder.customerPhone || "",
+      customerAddress: newOrder.customerAddress || "",
       total: newOrder.total,
       paymentMethod: newOrder.paymentMethod || "UPI",
       items: newOrder.items || [],
@@ -71,8 +74,30 @@ export async function submitStrapiOrder(newOrder: {
       orderDate: new Date().toISOString(),
     };
 
+    // Deduct stock for ordered items from current products catalog in Strapi
+    const existingProducts = Array.isArray(currentWorkspace?.products) ? currentWorkspace.products : [];
+    const orderedItems = Array.isArray(newOrder.items) ? newOrder.items : [];
+
+    const updatedProducts = existingProducts.map((p: any) => {
+      const match = orderedItems.find((item: any) =>
+        (item.id && (String(item.id) === String(p.id) || String(item.id) === String(p.slug))) ||
+        (item.sku && p.sku && String(item.sku).trim().toLowerCase() === String(p.sku).trim().toLowerCase()) ||
+        (item.name && p.name && String(item.name).trim().toLowerCase() === String(p.name).trim().toLowerCase())
+      );
+      if (match && Number(match.quantity) > 0) {
+        const currentStock = Number(p.stock) || 0;
+        const newStock = Math.max(0, currentStock - Number(match.quantity));
+        return {
+          ...p,
+          stock: newStock,
+        };
+      }
+      return p;
+    });
+
     const success = await updateStrapiAdminWorkspace({
       orders: [orderPayload, ...existingOrders.map(({ id, ...rest }: any) => rest)],
+      products: updatedProducts.map(({ id, ...rest }: any) => rest),
     });
 
     return success;

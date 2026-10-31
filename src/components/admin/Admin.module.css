@@ -287,6 +287,19 @@
 .modalForm textarea:focus { border-color: #aa95d3; box-shadow: 0 0 0 3px #8060ce15; }
 .modalActions .primaryButton, .modalActions .secondaryButton { min-height: 38px; }
 .modalHead p { margin-top: 5px; color: #8f879a; font-size: 9px; }
+.orderModal { width: min(100%, 620px); }
+.orderMetaGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; padding: 12px; border: 1px solid #eeeaf2; border-radius: 9px; background: #faf9fd; }
+.orderMetaItem { display: flex; flex-direction: column; gap: 3px; }
+.orderMetaItem span { color: #9a93a6; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.orderMetaItem strong { color: #392f49; font-size: 11px; }
+.orderSectionBlock { margin-top: 15px; }
+.orderSectionBlock h4 { margin: 0 0 8px; color: #433954; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
+.orderItemsTable { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 10px; }
+.orderItemsTable th { padding: 7px 9px; background: #f4eff9; color: #675b7b; font-size: 8px; font-weight: 700; text-align: left; }
+.orderItemsTable td { padding: 9px; border-bottom: 1px solid #f0edf4; color: #453c54; }
+.orderItemsTable tr:last-child td { border-bottom: none; }
+.orderAddressBox { padding: 10px 12px; border: 1px solid #f0edf4; border-radius: 8px; background: #fff; color: #504660; font-size: 10px; line-height: 1.5; }
+.invoiceActions { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 14px; border-top: 1px solid #eeeaf2; }
 .formError { padding: 9px 10px; border: 1px solid #f0d6d6; border-radius: 7px; color: #a34444; background: #fff6f6; font-size: 9px; }
 
 @media (max-width: 820px) {

@@ -1,15 +1,15 @@
 import { notFound } from "next/navigation";
 import { categories as fallbackCategories, products as fallbackProducts } from "../../../data/products";
 import { fetchStrapiAdminWorkspace } from "../../../lib/strapi";
-import ProductGrid from "../../../components/products/ProductGrid/ProductGrid";
+import CategoryView from "./CategoryView";
 import type { Product } from "../../../types/product";
-import styles from "./category.module.css";
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let categoryName = "";
   let categoryDescription = "";
-  let items: Product[] = [];
+  let subcategories: string[] = [];
+  let items: (Product & { subcategory?: string })[] = [];
 
   try {
     const data = await fetchStrapiAdminWorkspace();
@@ -21,16 +21,29 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       if (catMatch) {
         categoryName = catMatch.name;
         categoryDescription = catMatch.description || "";
+        
+        // Parse subcategories from Strapi category definition
+        if (catMatch.subcategories) {
+          if (Array.isArray(catMatch.subcategories)) {
+            subcategories = catMatch.subcategories;
+          } else if (typeof catMatch.subcategories === "string") {
+            subcategories = catMatch.subcategories
+              .split(",")
+              .map((s: string) => s.trim())
+              .filter(Boolean);
+          }
+        }
       }
 
       if (categoryName && Array.isArray(data.products)) {
         items = data.products
-          .filter((p: any) => p.category?.toLowerCase() === categoryName.toLowerCase())
+          .filter((p: any) => p.category?.toLowerCase() === categoryName.toLowerCase() && p.status !== "Draft")
           .map((p: any) => ({
             id: p.id ? String(p.id) : p.slug,
             slug: p.slug,
             name: p.name,
             category: p.category,
+            subcategory: p.subcategory || "",
             price: Number(p.price) || 0,
             originalPrice: p.originalPrice ? Number(p.originalPrice) : undefined,
             shortDescription: p.description ? p.description.slice(0, 80) : "Handcrafted piece.",
@@ -38,7 +51,25 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             sku: p.sku || `SW-${p.slug}`,
             stock: Number(p.stock) || 0,
             featuredRank: 1,
+            image: p.image || undefined,
+            colors: typeof p.colors === "string" ? p.colors.split(",").map((c: string) => c.trim()).filter(Boolean) : (Array.isArray(p.colors) ? p.colors : []),
+            sizes: typeof p.sizes === "string" ? p.sizes.split(",").map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(p.sizes) ? p.sizes : []),
+            reviews: Array.isArray(p.reviews) ? p.reviews : [],
           }));
+
+        // If no subcategories defined on category, extract dynamic unique subcategories from products
+        if (!subcategories.length) {
+          const extracted = Array.from(
+            new Set(
+              items
+                .map((it) => it.subcategory?.trim())
+                .filter((sub): sub is string => Boolean(sub && sub.length > 0))
+            )
+          );
+          if (extracted.length) {
+            subcategories = extracted;
+          }
+        }
       }
     }
   } catch (err) {
@@ -51,21 +82,19 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     if (!fallbackCat) notFound();
     categoryName = fallbackCat.name;
     categoryDescription = fallbackCat.description;
-    items = fallbackProducts.filter((product) => product.category === fallbackCat.name);
+    subcategories = (fallbackCat as any).subcategories || [];
+    items = fallbackProducts
+      .filter((product) => product.category === fallbackCat.name)
+      .map((p) => ({ ...p, subcategory: "" }));
   }
 
   return (
-    <main className={styles.page}>
-      <div className="container">
-        <span className={styles.eyebrow}>THE COLLECTION</span>
-        <h1>
-          {categoryName}
-          <em>.</em>
-        </h1>
-        <p>{categoryDescription}</p>
-        <div className={styles.count}>{items.length} pieces</div>
-        <ProductGrid products={items} />
-      </div>
-    </main>
+    <CategoryView
+      categoryName={categoryName}
+      categoryDescription={categoryDescription}
+      categorySlug={slug}
+      subcategories={subcategories}
+      items={items}
+    />
   );
 }

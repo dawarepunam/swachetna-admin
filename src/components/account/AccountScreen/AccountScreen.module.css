@@ -16,7 +16,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, .92fr) minmax(390px, 1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1fr);
   align-items: stretch;
   overflow: hidden;
   min-height: 510px;
@@ -81,20 +81,20 @@
 .order strong { color: #43364b; font-size: 12px; }
 .order small { grid-column: 1 / -1; color: #9d929f; font-size: 10px; }
 
-@media (max-width: 760px) {
-  .page { min-height: auto; padding: 25px 16px 54px; }
-  .grid { width: min(560px, 100%); grid-template-columns: 1fr; min-height: auto; margin-inline: auto; border-radius: 22px; }
+@media (max-width: 860px) {
+  .page { min-height: auto; padding: 22px 14px 48px; }
+  .grid { width: 100%; grid-template-columns: 1fr; min-height: auto; margin-inline: auto; border-radius: 20px; }
   .introPanel { display: none; }
-  .panel { padding: 30px 25px 28px; }
-  .panelHeading { margin-bottom: 24px; }
+  .panel { padding: 26px 20px 24px; }
+  .panelHeading { margin-bottom: 20px; }
 }
 
-@media (max-width: 390px) {
-  .page { padding-inline: 11px; }
-  .introPanel { padding-inline: 20px; }
-  .panel { padding-inline: 20px; }
-  .panel h2 { font-size: 25px; }
-  .links { align-items: flex-start; flex-direction: column; }
+@media (max-width: 420px) {
+  .page { padding-inline: 10px; }
+  .panel { padding: 20px 14px 18px; }
+  .panel h2 { font-size: 22px; }
+  .links { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .order { grid-template-columns: 1fr; gap: 4px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
