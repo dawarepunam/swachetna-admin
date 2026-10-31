@@ -46,6 +46,7 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const [categoryDialog, setCategoryDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<AdminCategory | null>(null);
+  const [subcollectionDialog, setSubcollectionDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [toast, setToast] = useState("");
   const [campaignName, setCampaignName] = useState("");
@@ -195,7 +196,27 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
       {section === "dashboard" && <button type="button" className={styles.secondaryButton} onClick={() => { const sample = data.orders.length === 0; const ok = exportOrders(orderRecords, sample); notify(ok ? (sample ? "Preview sample orders downloaded." : "Orders downloaded successfully.") : "Could not download the orders file."); }}><Download size={15} /> Export orders</button>}
       {section === "inventory" && <button type="button" className={`${styles.secondaryButton} ${advancedFilters ? styles.filterActive : ""}`} aria-expanded={advancedFilters} onClick={() => setAdvancedFilters((value) => !value)}><SlidersHorizontal size={15} /> More filters</button>}
       {section === "products" && <Link href="/admin/products/new" className={`${styles.primaryButton} ${styles.addProductButton}`}><Plus size={16} /> Add product</Link>}
-      {section === "categories" && <button type="button" className={styles.primaryButton} aria-haspopup="dialog" aria-controls="category-dialog" onClick={() => { setEditingCategory(null); setCategoryDialog(true); }}><Plus size={16} /> Add collection</button>}
+      {section === "categories" && (
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => setSubcollectionDialog(true)}
+            style={{ fontWeight: 600 }}
+          >
+            <Plus size={15} /> Add sub-collection
+          </button>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            aria-haspopup="dialog"
+            aria-controls="category-dialog"
+            onClick={() => { setEditingCategory(null); setCategoryDialog(true); }}
+          >
+            <Plus size={16} /> Add collection
+          </button>
+        </div>
+      )}
       {section === "campaigns" && <a className={styles.secondaryButton} href="#new-program"><Plus size={15} /> New program</a>}
     </div></div>
 
@@ -217,6 +238,38 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
     {toast && <div className={styles.toast} role="status"><span><Check size={16} /></span>{toast}<button type="button" onClick={() => setToast("")} aria-label="Dismiss notification"><X size={15} /></button></div>}
     {productDialog && <ProductDialog product={editingProduct} categories={data.categories} onClose={closeProductDialog} returnToProducts={initialProductDialog} onSave={saveProduct} />}
     {categoryDialog && <CategoryDialog category={editingCategory} onClose={() => { setCategoryDialog(false); setEditingCategory(null); }} onSave={saveCategory} />}
+    {subcollectionDialog && (
+      <SubcollectionDialog
+        categories={data.categories}
+        onClose={() => setSubcollectionDialog(false)}
+        onSave={async (parentCategoryName, newSubName) => {
+          const parent = data.categories.find((c) => c.name.toLowerCase() === parentCategoryName.toLowerCase());
+          if (!parent) {
+            notify("Selected collection not found.");
+            return false;
+          }
+          const existingSubs = Array.isArray(parent.subcategories)
+            ? [...parent.subcategories]
+            : (parent.subcategories ? String(parent.subcategories).split(",").map((s) => s.trim()).filter(Boolean) : []);
+          
+          if (existingSubs.some((s) => s.toLowerCase() === newSubName.toLowerCase())) {
+            notify(`"${newSubName}" already exists in ${parent.name}.`);
+            return false;
+          }
+
+          const updatedSubs = [...existingSubs, newSubName];
+          const updatedCategories = data.categories.map((c) =>
+            c.slug === parent.slug ? { ...c, subcategories: updatedSubs } : c
+          );
+
+          data.setCategories(updatedCategories);
+          setSubcollectionDialog(false);
+          const ok = await data.syncWorkspace({ categories: updatedCategories });
+          notify(ok ? `"${newSubName}" added to ${parent.name}!` : "Sub-collection saved locally.");
+          return true;
+        }}
+      />
+    )}
     {selectedOrder && <OrderDialog order={selectedOrder} onClose={() => setSelectedOrder(null)} onStatusChange={(newStatus) => { data.setOrderStatus(selectedOrder.id, newStatus); setSelectedOrder((prev) => prev ? { ...prev, status: newStatus } : null); notify(`Order ${selectedOrder.id} status updated to ${newStatus}`); }} />}
   </div>;
 }
@@ -1146,6 +1199,127 @@ function CategoryDialog({ category, onClose, onSave }: { category: AdminCategory
     const subs = subcategoriesText.split(",").map((s) => s.trim()).filter(Boolean);
     if (!onSave(name.trim(), description.trim(), subs)) setError("A collection with this name already exists."); 
   }}><label>Collection name<input autoFocus value={name} onChange={(event) => { setName(event.target.value); setError(""); }} placeholder="e.g. Food & NGO Products" required maxLength={80} /></label><label>Description<textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Description of this collection..." required maxLength={240} /></label><label>Sub-collections <small className={styles.formHint}>(Separate by comma, e.g. Pickle, Dryfruit Laddu, Papad)</small><input value={subcategoriesText} onChange={(event) => setSubcategoriesText(event.target.value)} placeholder="Pickle, Dryfruit Laddu, Papad, Spices" maxLength={300} /></label>{error && <p className={styles.formError} role="alert">{error}</p>}<div className={styles.modalActions}><button type="button" className={styles.secondaryButton} onClick={onClose}>Cancel</button><button type="submit" className={styles.primaryButton}>{category ? "Save changes" : "Add collection"} <Check size={15} /></button></div></form></section></div>;
+}
+
+function SubcollectionDialog({ categories, onClose, onSave }: { categories: AdminCategory[]; onClose: () => void; onSave: (parentCategoryName: string, subName: string) => boolean | Promise<boolean> }) {
+  const [parentName, setParentName] = useState(categories[0]?.name || "");
+  const [subName, setSubName] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const selectedCategoryObj = categories.find((c) => c.name === parentName);
+  const currentSubs = Array.isArray(selectedCategoryObj?.subcategories)
+    ? selectedCategoryObj.subcategories
+    : (selectedCategoryObj?.subcategories ? String(selectedCategoryObj.subcategories).split(",").map((s) => s.trim()).filter(Boolean) : []);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!subName.trim()) {
+      setError("Please enter a sub-collection name.");
+      return;
+    }
+    if (!parentName) {
+      setError("Please select a parent collection.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError("");
+      const success = await onSave(parentName, subName.trim());
+      if (!success) {
+        setError(`"${subName.trim()}" already exists in ${parentName}.`);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.modalScrim} role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="subcollection-title">
+        <div className={styles.modalHead}>
+          <div>
+            <span className={styles.eyebrow}>ORGANIZATION</span>
+            <h2 id="subcollection-title">Add Sub-collection</h2>
+            <p>Create a dedicated sub-department under any existing collection.</p>
+          </div>
+          <button type="button" className={styles.iconButton} onClick={onClose} aria-label="Close">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form className={styles.modalForm} onSubmit={handleSubmit}>
+          <label>
+            Select Parent Collection
+            <select value={parentName} onChange={(e) => setParentName(e.target.value)} required>
+              {categories.map((c) => (
+                <option key={c.slug} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            New Sub-collection Name
+            <input
+              autoFocus
+              value={subName}
+              onChange={(e) => {
+                setSubName(e.target.value);
+                setError("");
+              }}
+              placeholder="e.g. Dryfruit Laddus, Organic Honey, Ceramic Bowls"
+              required
+              maxLength={80}
+            />
+          </label>
+
+          {/* Current existing subcategories in the selected parent */}
+          <div style={{ padding: "12px", background: "#fbf9fd", borderRadius: "8px", border: "1px solid #ebe4f3", marginTop: "4px" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "#54435b", display: "block", marginBottom: "6px" }}>
+              Existing Sub-departments in {parentName}:
+            </span>
+            {currentSubs.length > 0 ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                {currentSubs.map((s) => (
+                  <span
+                    key={s}
+                    style={{
+                      fontSize: "11px",
+                      background: "#f0eaf7",
+                      color: "#684882",
+                      padding: "2px 8px",
+                      borderRadius: "10px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span style={{ fontSize: "11px", color: "#8a75a0", fontStyle: "italic" }}>
+                No sub-collections yet in this category.
+              </span>
+            )}
+          </div>
+
+          {error && <p className={styles.formError} role="alert">{error}</p>}
+
+          <div className={styles.modalActions}>
+            <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </button>
+            <button type="submit" className={styles.primaryButton} disabled={isSubmitting}>
+              {isSubmitting ? "Adding..." : "Add Sub-collection"} <Check size={15} />
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
 }
 
 function OrderDialog({ order, onClose, onStatusChange }: { order: AdminOrder; onClose: () => void; onStatusChange: (status: AdminOrder["status"]) => void }) {
