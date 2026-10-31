@@ -14,8 +14,9 @@
 
 .modal {
   width: min(100%, 560px);
-  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 32px);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 
   background: var(--color-surface);
   border-radius: var(--radius-xl);
@@ -59,4 +60,25 @@
 
 .content {
   padding: var(--space-6);
+}
+
+@media (max-width: 480px) {
+  .overlay {
+    padding: 10px;
+    align-items: flex-end;
+  }
+  .modal {
+    width: 100%;
+    max-height: 88dvh;
+    border-radius: 20px 20px 0 0;
+  }
+  .header {
+    padding: 14px 16px;
+  }
+  .header h2 {
+    font-size: 18px;
+  }
+  .content {
+    padding: 16px;
+  }
 }

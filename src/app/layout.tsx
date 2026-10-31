@@ -1,6 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import StoreShell from "../components/layout/StoreShell";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: "#2b123f",
+};
 
 export const metadata: Metadata = {
   title: { default: "Swachetna Foundation-Work to create a difference", template: "%s | Swachetna Foundation" },
@@ -9,6 +18,11 @@ export const metadata: Metadata = {
     icon: "/images/swachetna-purple.webp",
     shortcut: "/images/swachetna-purple.webp",
     apple: "/images/swachetna-purple.webp",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Swachetna",
   },
 };
 

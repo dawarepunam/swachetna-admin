@@ -855,7 +855,7 @@
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 28px;
   }
   .gallery {
     position: static;
@@ -863,12 +863,51 @@
 }
 
 @media (max-width: 600px) {
+  .page {
+    padding: 16px 0 60px;
+  }
+  .crumb {
+    font-size: 11px;
+    margin-bottom: 18px;
+    gap: 4px;
+  }
+  .galleryContainer {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+  .angleThumbnailsList {
+    flex-direction: row;
+    max-height: none;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 6px;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .angleThumbBtn {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+  }
+  .mainArtWrapper {
+    border-radius: 18px;
+  }
+  .productName {
+    font-size: 24px;
+    line-height: 1.25;
+  }
   .formRow {
     grid-template-columns: 1fr;
     gap: 12px;
   }
   .actions {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .addToCartBtn, .buyNowBtn {
+    min-height: 48px;
+    font-size: 13.5px;
   }
   .reviewsHead {
     flex-direction: column;
@@ -880,5 +919,12 @@
   }
   .reviewForm {
     padding: 20px 16px;
+  }
+  .related {
+    margin-top: 50px;
+    padding-top: 36px;
+  }
+  .relatedHeading h2 {
+    font-size: 22px;
   }
 }

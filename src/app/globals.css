@@ -12,6 +12,8 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 html,
@@ -19,6 +21,9 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
 }
 
 body {
@@ -28,7 +33,27 @@ body {
   font-size: var(--font-size-md);
   line-height: var(--line-height-normal);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Touch & tap targets for mobile/iOS */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Universal fluid image and media responsiveness */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive tables on small screens */
+table {
+  max-width: 100%;
 }
 
 .store-notice {
