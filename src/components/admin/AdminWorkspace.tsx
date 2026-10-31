@@ -840,15 +840,34 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
 
     <div className={styles.formRow}>
       <label>Main Collection<select value={category} onChange={(event) => { setCategory(event.target.value); setSubcategory(""); }}>{categories.length ? categories.map((item) => <option key={item.slug} value={item.name}>{item.name}</option>) : <option>Uncategorized</option>}</select></label>
-      <label>Sub-collection {availableSubcategories.length > 0 ? <small className={styles.formHint}>(Select sub-category)</small> : <small className={styles.formHint}>(Optional)</small>}
-        {availableSubcategories.length > 0 ? (
-          <select value={subcategory} onChange={(event) => setSubcategory(event.target.value)}>
-            <option value="">-- Select Sub-collection --</option>
-            {availableSubcategories.map((sub) => <option key={sub} value={sub}>{sub}</option>)}
-          </select>
-        ) : (
-          <input value={subcategory} onChange={(event) => setSubcategory(event.target.value)} placeholder="e.g. Pickle, Laddu, Papad" maxLength={60} />
-        )}
+      <label>
+        Sub-collection
+        <small className={styles.formHint} style={{ marginLeft: "6px" }}>(Select from list or type custom)</small>
+        <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+          {availableSubcategories.length > 0 && (
+            <select
+              value={availableSubcategories.includes(subcategory) ? subcategory : ""}
+              onChange={(event) => {
+                if (event.target.value) {
+                  setSubcategory(event.target.value);
+                }
+              }}
+              style={{ flex: 1, minWidth: "140px" }}
+            >
+              <option value="">-- Choose existing --</option>
+              {availableSubcategories.map((sub) => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
+            </select>
+          )}
+          <input
+            value={subcategory}
+            onChange={(event) => setSubcategory(event.target.value)}
+            placeholder="e.g. Dryfruit Laddus, Traditional Pickles"
+            maxLength={80}
+            style={{ flex: 1 }}
+          />
+        </div>
       </label>
     </div>
     <div className={styles.formRow}><label>Price (INR)<input inputMode="decimal" min="0" step="0.01" type="number" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="0.00" required /></label><label>Stock quantity<input inputMode="numeric" min="0" step="1" type="number" value={stock} onChange={(event) => setStock(event.target.value)} placeholder="0" required /></label></div>
