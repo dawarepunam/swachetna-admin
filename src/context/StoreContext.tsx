@@ -71,23 +71,7 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
     setReady(true);
   }, []);
 
-  // Filter out ghost cart items whose products no longer exist once products are ready
-  useEffect(() => {
-    if (!ready || products.length === 0) return;
-    setCart((current) => {
-      const valid = current.filter((line) => {
-        const found = findProduct(line.productId);
-        return Boolean(found);
-      });
-      // Only update if count changed
-      if (valid.length !== current.length) {
-        return valid;
-      }
-      return current;
-    });
-  }, [ready, products, findProduct]);
-
-  // Persist valid cart and wishlist whenever changed
+  // Persist cart and wishlist whenever changed
   useEffect(() => {
     if (!ready) return;
     try {
