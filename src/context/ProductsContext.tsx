@@ -133,11 +133,13 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
           })));
         }
 
-        if (data.content && data.content.title) {
+        if (data.content && data.content.title && data.content.title.trim() !== "Test") {
           setContent({
             title: data.content.title,
             description: data.content.description || defaultContent.description,
           });
+        } else {
+          setContent(defaultContent);
         }
 
         if (data.settings && data.settings.organization) {
