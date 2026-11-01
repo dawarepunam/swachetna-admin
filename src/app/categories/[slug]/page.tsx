@@ -85,7 +85,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     subcategories = (fallbackCat as any).subcategories || [];
     items = fallbackProducts
       .filter((product) => product.category === fallbackCat.name)
-      .map((p) => ({ ...p, subcategory: "" }));
+      .map((p) => ({ ...p, subcategory: (p as any).subcategory || "" }));
   }
 
   return (

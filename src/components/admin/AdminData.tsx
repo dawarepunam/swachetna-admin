@@ -146,11 +146,57 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
               variants: Array.isArray(p.variants) ? p.variants : [],
               reviews: Array.isArray(p.reviews) ? p.reviews : [],
             }));
-            setProducts(mapped);
+
+            // Merge with authentic baseProducts so admin always sees authentic items with photos
+            const baseIds = new Set(baseProducts.map((b) => b.id));
+            const baseSlugs = new Set(baseProducts.map((b) => b.slug));
+            const customProducts = mapped.filter((p: AdminProduct) => !baseIds.has(p.id) && !baseSlugs.has(p.slug));
+            const enrichedBase = baseProducts.map((b) => {
+              const match = mapped.find((p: AdminProduct) => p.id === b.id || p.slug === b.slug);
+              if (!match) {
+                return {
+                  id: b.id,
+                  slug: b.slug,
+                  name: b.name,
+                  category: b.category,
+                  subcategory: b.subcategory,
+                  sku: b.sku,
+                  price: b.price,
+                  originalPrice: b.originalPrice,
+                  stock: b.stock,
+                  status: "Published" as const,
+                  image: b.image,
+                  images: b.images,
+                  colors: b.colors,
+                  sizes: b.sizes,
+                  variants: b.variants,
+                };
+              }
+              return {
+                id: b.id,
+                slug: b.slug,
+                name: match.name || b.name,
+                category: match.category || b.category,
+                subcategory: match.subcategory || b.subcategory,
+                sku: match.sku || b.sku,
+                price: match.price || b.price,
+                originalPrice: match.originalPrice !== undefined ? match.originalPrice : b.originalPrice,
+                stock: match.stock !== undefined ? match.stock : b.stock,
+                status: match.status || "Published",
+                image: match.image || b.image,
+                images: (match.images && match.images.length > 0) ? match.images : b.images,
+                colors: match.colors || b.colors,
+                sizes: match.sizes || b.sizes,
+                variants: match.variants || b.variants,
+              };
+            });
+
+            const mergedAdminProducts = [...enrichedBase, ...customProducts];
+            setProducts(mergedAdminProducts);
             // Save to localStorage immediately
             try {
               window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                products: mapped,
+                products: mergedAdminProducts,
                 categories: strapiData.categories || [],
                 campaigns: strapiData.campaigns || [],
                 content: strapiData.content || initialContent,
