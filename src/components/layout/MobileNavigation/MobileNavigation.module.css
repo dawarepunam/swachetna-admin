@@ -40,6 +40,37 @@
   border-bottom: 1px solid rgba(84, 52, 104, 0.12);
 }
 
+.drawerSearchBox {
+  margin-top: 14px;
+}
+
+.drawerSearchBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(133, 69, 177, 0.18);
+  background: #ffffff;
+  color: #7b6589;
+  font-size: 13px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(60, 26, 82, 0.05);
+  transition: all 0.2s ease;
+}
+
+.drawerSearchBtn:hover {
+  background: #fbf7fd;
+  border-color: #9a43ed;
+  color: #4b2361;
+}
+
+.drawerSearchBtn svg {
+  color: #9a43ed;
+  flex-shrink: 0;
+}
+
 .menuLabel {
   display: block;
 

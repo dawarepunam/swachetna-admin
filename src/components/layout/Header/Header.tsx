@@ -22,7 +22,9 @@ export default function Header() {
   // Live Instant Search State
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const searchRef = useRef<HTMLDivElement | null>(null);
+  const mobileSearchRef = useRef<HTMLDivElement | null>(null);
 
   const { cartCount, wishlist, allProducts } = useStore();
   const { categories, products } = useProducts();
@@ -46,7 +48,9 @@ export default function Header() {
   // Click outside listener to close search dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (searchRef.current && !searchRef.current.contains(target) &&
+          mobileSearchRef.current && !mobileSearchRef.current.contains(target)) {
         setSearchOpen(false);
       }
     };
@@ -367,6 +371,16 @@ export default function Header() {
               )}
             </div>
 
+            {/* Mobile Search Toggle Button */}
+            <button
+              type="button"
+              className={`${styles.actionButton} ${styles.mobileSearchToggle}`}
+              onClick={() => setMobileSearchVisible((prev) => !prev)}
+              aria-label={mobileSearchVisible ? "Close search bar" : "Open search bar"}
+            >
+              {mobileSearchVisible ? <X size={19} /> : <Search size={19} />}
+            </button>
+
             <Link href="/account/login" className={`${styles.actionButton} ${styles.mobileHidden}`} aria-label="Account">
               <UserRound size={19} />
             </Link>
@@ -400,6 +414,98 @@ export default function Header() {
             <span />
           </button>
         </div>
+
+        {/* Mobile Full-Width Interactive Search Bar */}
+        {mobileSearchVisible && (
+          <div className={styles.mobileSearchDropdown} ref={mobileSearchRef}>
+            <div className={styles.mobileSearchBarWrapper}>
+              <Search size={16} className={styles.mobileSearchIcon} />
+              <input
+                type="text"
+                placeholder="Search pickles, laddus, handicrafts..."
+                value={searchQuery}
+                autoFocus
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(true);
+                }}
+                className={styles.mobileSearchInput}
+                aria-label="Mobile Search"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className={styles.clearSearchBtn}
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchOpen(false);
+                  }}
+                  aria-label="Clear mobile search"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
+
+            {/* Live Suggestions under Mobile Search */}
+            {searchOpen && searchQuery.trim().length >= 2 && (
+              <div className={styles.mobileSuggestionsList}>
+                {liveSuggestions.length > 0 ? (
+                  <>
+                    <div className={styles.suggestionHeader}>
+                      Suggested Products ({liveSuggestions.length})
+                    </div>
+                    {liveSuggestions.map((prod) => (
+                      <Link
+                        key={prod.id}
+                        href={`/products/${prod.slug}`}
+                        className={styles.suggestionItem}
+                        onClick={() => {
+                          setSearchOpen(false);
+                          setMobileSearchVisible(false);
+                          setSearchQuery("");
+                        }}
+                      >
+                        {prod.image ? (
+                          <img
+                            src={prod.image}
+                            alt={prod.name}
+                            className={styles.suggestionThumb}
+                          />
+                        ) : (
+                          <div className={styles.suggestionThumb} />
+                        )}
+                        <div className={styles.suggestionInfo}>
+                          <span className={styles.suggestionName}>{prod.name}</span>
+                          <span className={styles.suggestionCategory}>{prod.category}</span>
+                        </div>
+                        <span className={styles.suggestionPrice}>
+                          {formatCurrency(prod.price)}
+                        </span>
+                      </Link>
+                    ))}
+                    <div className={styles.suggestionFooter}>
+                      <Link
+                        href={`/search?q=${encodeURIComponent(searchQuery)}`}
+                        onClick={() => {
+                          setSearchOpen(false);
+                          setMobileSearchVisible(false);
+                          setSearchQuery("");
+                        }}
+                      >
+                        View all results for &ldquo;{searchQuery}&rdquo; <ArrowRight size={13} />
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.noMatches}>
+                    No products matching &ldquo;{searchQuery}&rdquo;
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </header>
       <MobileNavigation isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
     </>

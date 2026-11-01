@@ -35,6 +35,14 @@ export default function MobileNavigation({
           </button>
         </div>
 
+        {/* Quick Search Shortcut inside Drawer */}
+        <div className={styles.drawerSearchBox}>
+          <Link href="/search" onClick={onClose} className={styles.drawerSearchBtn}>
+            <Search size={16} />
+            <span>Search products & collections...</span>
+          </Link>
+        </div>
+
         <nav className={styles.links}>
           <Link href="/" onClick={onClose} className={styles.navMainLink}>
             <span>01</span> Home

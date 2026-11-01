@@ -11,7 +11,11 @@
   transition: background-color .28s ease, border-color .28s ease, box-shadow .28s ease;
 }
 
-.overHero.scrolled { background:rgba(255,255,255,.82); border-bottom-color:rgba(54,39,65,.12); box-shadow:0 8px 28px rgba(39,24,49,.08); }
+.overHero.scrolled {
+  background: rgba(255, 255, 255, .82);
+  border-bottom-color: rgba(54, 39, 65, .12);
+  box-shadow: 0 8px 28px rgba(39, 24, 49, .08);
+}
 
 .overHero {
   position: fixed;
@@ -62,8 +66,18 @@
   justify-self: start;
 }
 
-.logoImage { display: block; width: 132px; height: auto; object-fit: contain; filter: brightness(0) invert(1); transition:filter .28s ease; }
-.overHero.scrolled .logoImage { filter: none; }
+.logoImage {
+  display: block;
+  width: 132px;
+  height: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  transition: filter .28s ease;
+}
+
+.overHero.scrolled .logoImage {
+  filter: none;
+}
 
 /* =========================
    DESKTOP NAVIGATION
@@ -127,8 +141,14 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.overHero.scrolled .desktopNavigation a { color:#4b3c54; }
-.overHero.scrolled .desktopNavigation a:hover,.overHero.scrolled .desktopNavigation a.active { color:#6e3f86; }
+.overHero.scrolled .desktopNavigation a {
+  color: #4b3c54;
+}
+
+.overHero.scrolled .desktopNavigation a:hover,
+.overHero.scrolled .desktopNavigation a.active {
+  color: #6e3f86;
+}
 
 /* =========================
    ACTIONS
@@ -175,14 +195,20 @@
 }
 
 .actionButton:hover {
-  background: rgba(255,255,255,.12);
+  background: rgba(255, 255, 255, .12);
   color: #e4c3ff;
 
   transform: translateY(-1px);
 }
 
-.overHero.scrolled .actionButton { color:#433448; }
-.overHero.scrolled .actionButton:hover { background:rgba(91,52,117,.1); color:#70428a; }
+.overHero.scrolled .actionButton {
+  color: #433448;
+}
+
+.overHero.scrolled .actionButton:hover {
+  background: rgba(91, 52, 117, .1);
+  color: #70428a;
+}
 
 .cartCount {
   position: absolute;
@@ -248,10 +274,17 @@
 }
 
 .mobileMenuButton span:first-child,
-.mobileMenuButton span:last-child { width: 16px; }
+.mobileMenuButton span:last-child {
+  width: 16px;
+}
 
-.mobileMenuButton span:first-child { transform: translateX(-2px); }
-.mobileMenuButton span:last-child { transform: translateX(2px); }
+.mobileMenuButton span:first-child {
+  transform: translateX(-2px);
+}
+
+.mobileMenuButton span:last-child {
+  transform: translateX(2px);
+}
 
 .mobileMenuButton:hover {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.24), rgba(190, 124, 255, 0.16));
@@ -260,17 +293,24 @@
   transform: translateY(-2px);
 }
 
-.mobileMenuButton:focus-visible { outline: 2px solid #d6a5ff; outline-offset: 3px; }
+.mobileMenuButton:focus-visible {
+  outline: 2px solid #d6a5ff;
+  outline-offset: 3px;
+}
 
 .mobileMenuButton:hover span:first-child,
-.mobileMenuButton:hover span:last-child { width: 20px; }
+.mobileMenuButton:hover span:last-child {
+  width: 20px;
+}
 
 .mobileMenuButton[aria-expanded="true"] span:first-child {
   width: 20px;
   transform: translateY(6px) rotate(45deg);
 }
 
-.mobileMenuButton[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.mobileMenuButton[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+}
 
 .mobileMenuButton[aria-expanded="true"] span:last-child {
   width: 20px;
@@ -343,8 +383,15 @@
 }
 
 @keyframes megaFadeIn {
-  from { opacity: 0; transform: translate(-50%, -8px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 .megaDropdownInner {
@@ -597,13 +644,40 @@
 }
 
 @media (min-width: 901px) {
-  .container { position: relative; display: flex; justify-content: space-between; }
-  .desktopNavigation { position: absolute; left: 50%; width: max-content; transform: translateX(-50%); }
-  .desktopNavigation a { font-size: 16px; }
-  .actions { margin-left: auto; margin-right: clamp(28px, 3vw, 48px); }
-  .actionButton svg { width: 22px; height: 22px; }
-  .logo { margin-left: clamp(28px, 3vw, 48px); }
-  .logoImage { width: 160px; }
+  .container {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .desktopNavigation {
+    position: absolute;
+    left: 50%;
+    width: max-content;
+    transform: translateX(-50%);
+  }
+
+  .desktopNavigation a {
+    font-size: 16px;
+  }
+
+  .actions {
+    margin-left: auto;
+    margin-right: clamp(28px, 3vw, 48px);
+  }
+
+  .actionButton svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .logo {
+    margin-left: clamp(28px, 3vw, 48px);
+  }
+
+  .logoImage {
+    width: 160px;
+  }
 }
 
 /* =========================
@@ -631,9 +705,13 @@
     margin-left: 8px;
   }
 
-  .logoImage { width: 136px; }
+  .logoImage {
+    width: 136px;
+  }
 
-  .mobileHidden { display: none; }
+  .mobileHidden {
+    display: none;
+  }
 
   .actions {
     gap: 0;
@@ -652,7 +730,9 @@
 }
 
 @media (max-width: 560px) {
-  .overHero { top: 40px; }
+  .overHero {
+    top: 40px;
+  }
 }
 
 /* =========================
@@ -664,7 +744,9 @@
     width: calc(100% - 24px);
   }
 
-  .logoImage { width: 124px; }
+  .logoImage {
+    width: 124px;
+  }
 
   .actionButton {
     width: 42px;
@@ -682,13 +764,33 @@
 }
 
 @media (max-width: 360px) {
-  .container { width: calc(100% - 16px); gap: 7px; }
-  .mobileMenuButton { width: 38px; height: 38px; }
-  .logoImage { width: 112px; }
-  .actionButton { width: 38px; height: 38px; }
+  .container {
+    width: calc(100% - 16px);
+    gap: 7px;
+  }
+
+  .mobileMenuButton {
+    width: 38px;
+    height: 38px;
+  }
+
+  .logoImage {
+    width: 112px;
+  }
+
+  .actionButton {
+    width: 38px;
+    height: 38px;
+  }
 }
 
-@media (prefers-reduced-motion:reduce) { .header,.logoImage { transition:none; } }
+@media (prefers-reduced-motion:reduce) {
+
+  .header,
+  .logoImage {
+    transition: none;
+  }
+}
 
 /* =========================
    LIVE SEARCH BAR & DROPDOWN
@@ -800,6 +902,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -906,4 +1009,105 @@
   text-align: center;
   color: #85748f;
   font-size: 13px;
+}
+
+/* =========================
+   MOBILE SEARCH TOGGLE & DROPDOWN
+========================= */
+.mobileSearchToggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileSearchToggle {
+    display: flex;
+  }
+
+  .mobileSearchDropdown {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 16px 14px;
+    background: rgba(35, 14, 52, 0.98);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    animation: fadeInDown 0.22s ease-out;
+  }
+
+  .overHero.scrolled .mobileSearchDropdown {
+    background: #ffffff;
+    border-top-color: #eedef5;
+    border-bottom-color: #e5d3ed;
+    box-shadow: 0 12px 28px rgba(60, 26, 82, 0.12);
+  }
+
+  .mobileSearchBarWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  .mobileSearchIcon {
+    position: absolute;
+    left: 14px;
+    color: #c9b4db;
+    pointer-events: none;
+  }
+
+  .overHero.scrolled .mobileSearchIcon {
+    color: #725785;
+  }
+
+  .mobileSearchInput {
+    width: 100%;
+    height: 42px;
+    padding: 0 38px 0 42px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-size: 13.5px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: all 0.2s ease;
+  }
+
+  .mobileSearchInput::placeholder {
+    color: #d1bddf;
+  }
+
+  .mobileSearchInput:focus {
+    background: #ffffff;
+    color: #2e1d3d;
+    border-color: #9a43ed;
+  }
+
+  .mobileSearchInput:focus::placeholder {
+    color: #9d8ea4;
+  }
+
+  .overHero.scrolled .mobileSearchInput {
+    background: #f5eff8;
+    color: #2e1d3d;
+    border-color: #dfd2e5;
+  }
+
+  .overHero.scrolled .mobileSearchInput:focus {
+    background: #ffffff;
+    border-color: #7a3e9c;
+  }
+
+  .mobileSuggestionsList {
+    margin-top: 10px;
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #ebddee;
+    box-shadow: 0 10px 28px rgba(35, 14, 50, 0.15);
+    overflow: hidden;
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

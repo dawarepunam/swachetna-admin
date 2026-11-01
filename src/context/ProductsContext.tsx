@@ -64,7 +64,7 @@ const ProductsContext = createContext<ProductsContextValue>({
   content: defaultContent,
   settings: defaultSettings,
   loading: false,
-  refreshProducts: async () => {},
+  refreshProducts: async () => { },
 });
 
 export function ProductsProvider({ children }: { children: ReactNode }) {
