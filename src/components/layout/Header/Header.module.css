@@ -11,19 +11,12 @@
   transition: background-color .28s ease, border-color .28s ease, box-shadow .28s ease;
 }
 
-.overHero.scrolled {
-  background: rgba(255, 255, 255, .82);
-  border-bottom-color: rgba(54, 39, 65, .12);
-  box-shadow: 0 8px 28px rgba(39, 24, 49, .08);
-}
-
 .overHero {
-  position: fixed;
-  inset-inline: 0;
-  top: 48px;
-  background: transparent;
-  border-bottom-color: transparent;
-  box-shadow: none;
+  position: sticky;
+  top: 0;
+  background: rgba(43, 18, 63, 0.98);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(25, 9, 38, 0.3);
 }
 
 .inFlow {
@@ -39,8 +32,7 @@
 }
 
 .overHero.scrolled {
-  top: 0;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.95);
   border-bottom-color: rgba(54, 39, 65, 0.12);
   box-shadow: 0 8px 28px rgba(39, 24, 49, 0.08);
 }
@@ -731,7 +723,7 @@
 
 @media (max-width: 560px) {
   .overHero {
-    top: 40px;
+    top: 0;
   }
 }
 

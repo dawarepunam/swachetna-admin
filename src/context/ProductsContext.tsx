@@ -81,11 +81,11 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
       const json = await res.json();
       const data = json?.data;
       if (data) {
-        // Products load करा (Strapi मधून)
+        // Products load करा (Strapi मधून, आणि authentic fallback catalog सोबत merge करा)
         let formattedProducts: Product[] = fallbackProducts;
         if (Array.isArray(data.products) && data.products.length > 0) {
           const publishedProducts = data.products.filter((p: any) => p.status !== "Draft");
-          formattedProducts = (publishedProducts.length > 0 ? publishedProducts : data.products).map((p: any, idx: number) => ({
+          const apiProducts = (publishedProducts.length > 0 ? publishedProducts : data.products).map((p: any, idx: number) => ({
             id: p.id ? String(p.id) : `p-${idx}`,
             slug: p.slug || `product-${idx}`,
             name: p.name || "Untitled Product",
@@ -106,6 +106,32 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
             variants: Array.isArray(p.variants) ? p.variants : [],
             reviews: Array.isArray(p.reviews) ? p.reviews : [],
           }));
+
+          // Test किंवा placeholder products (जसे की Scented Candle, Charcoal Soap) fallback authentic catalog ला override करू नयेत
+          // Strapi products मधील authentic items आणि admin ने ॲड केलेले नवीन products ठेवा, आणि fallback catalog चे authentic items सुरक्षित ठेवा
+          const fallbackIds = new Set(fallbackProducts.map((p) => p.id));
+          const fallbackSlugs = new Set(fallbackProducts.map((p) => p.slug));
+
+          // If Strapi returns test data with generic names and no authentic images, merge fallback products first
+          const customAdminProducts = apiProducts.filter(
+            (p: Product) => !fallbackIds.has(p.id) && !fallbackSlugs.has(p.slug)
+          );
+
+          // Update any fallback products that exist in apiProducts with latest admin edits (price, stock, etc.), preserving authentic images if Strapi image is missing
+          const enrichedFallback = fallbackProducts.map((fb) => {
+            const apiMatch = apiProducts.find((p: Product) => p.id === fb.id || p.slug === fb.slug);
+            if (!apiMatch) return fb;
+            return {
+              ...fb,
+              price: apiMatch.price || fb.price,
+              originalPrice: apiMatch.originalPrice !== undefined ? apiMatch.originalPrice : fb.originalPrice,
+              stock: apiMatch.stock !== undefined ? apiMatch.stock : fb.stock,
+              image: apiMatch.image || fb.image,
+              images: (apiMatch.images && apiMatch.images.length > 0) ? apiMatch.images : fb.images,
+            };
+          });
+
+          formattedProducts = [...enrichedFallback, ...customAdminProducts];
           setProducts(formattedProducts);
         }
 
