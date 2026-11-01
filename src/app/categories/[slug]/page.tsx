@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { categories as fallbackCategories, products as fallbackProducts } from "../../../data/products";
 import { fetchStrapiAdminWorkspace } from "../../../lib/strapi";
+import seededWorkspace from "../../../data/seededWorkspace.json";
 import CategoryView from "./CategoryView";
 import type { Product } from "../../../types/product";
 
@@ -12,7 +13,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   let items: (Product & { subcategory?: string })[] = [];
 
   try {
-    const data = await fetchStrapiAdminWorkspace();
+    const liveData = await fetchStrapiAdminWorkspace();
+    const data = (liveData && Array.isArray(liveData.products) && liveData.products.length > 0) ? liveData : (seededWorkspace as any);
     if (data) {
       const catMatch = Array.isArray(data.categories)
         ? data.categories.find((c: any) => c.slug === slug)

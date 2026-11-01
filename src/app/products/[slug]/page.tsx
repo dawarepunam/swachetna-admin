@@ -2,12 +2,14 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { products as fallbackProducts } from "../../../data/products";
 import { fetchStrapiAdminWorkspace } from "../../../lib/strapi";
+import seededWorkspace from "../../../data/seededWorkspace.json";
 import ProductDetail from "../../../components/products/ProductDetail/ProductDetail";
 import type { Product } from "../../../types/product";
 
 async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
-    const data = await fetchStrapiAdminWorkspace();
+    const liveData = await fetchStrapiAdminWorkspace();
+    const data = (liveData && Array.isArray(liveData.products) && liveData.products.length > 0) ? liveData : (seededWorkspace as any);
     if (data && Array.isArray(data.products)) {
       const match = data.products.find((p: any) => p.slug === slug);
       if (match) {
