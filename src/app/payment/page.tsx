@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, CreditCard, LockKeyhole, Smartphone, Truck } from "lucide-react";
-import { formatCurrency, products as staticCatalog } from "../../data/products";
+import { formatCurrency, products as staticCatalog, getProductGst } from "../../data/products";
 import { useStore } from "../../context/StoreContext";
 import { CHECKOUT_DRAFT_KEY, PAYMENT_METHOD_LABELS, type CheckoutDraft, type DemoOrder, type PaymentMethod } from "../../types/checkout";
 import styles from "./payment.module.css";
@@ -291,6 +291,21 @@ export default function PaymentPage() {
           </div>)}</div>
           <div className={styles.totalLines}>
             <div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
+            {(() => {
+              const totalGst = lines.reduce((acc, line) => {
+                const p = line.product;
+                const tax = getProductGst(p);
+                const linePrice = p.price * line.quantity;
+                const itemGst = (linePrice * tax.rate) / (100 + tax.rate);
+                return acc + itemGst;
+              }, 0);
+              return (
+                <div style={{ fontSize: "12px", color: "#6c5979", display: "flex", justifyContent: "space-between" }}>
+                  <span>Includes GST (CGST + SGST)</span>
+                  <strong>₹{Math.round(totalGst)}</strong>
+                </div>
+              );
+            })()}
             {appliedCoupon && (
               <div style={{ color: "#1a8f4c" }}>
                 <span>Coupon ({appliedCoupon.code})</span>

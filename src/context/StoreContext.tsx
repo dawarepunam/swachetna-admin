@@ -13,6 +13,8 @@ type CartLine = {
   slug?: string;
   sku?: string;
   category?: string;
+  gstRate?: number;
+  hsnCode?: string;
 };
 type SavedStore = { cart?: unknown; wishlist?: unknown };
 type StoreValue = {
@@ -140,6 +142,8 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
           slug: product.slug || existing.slug,
           sku: product.sku || existing.sku,
           category: product.category || existing.category,
+          gstRate: product.gstRate !== undefined ? product.gstRate : existing.gstRate,
+          hsnCode: product.hsnCode || existing.hsnCode,
         };
         return updated;
       }
@@ -154,6 +158,8 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
           slug: product.slug,
           sku: product.sku,
           category: product.category,
+          gstRate: product.gstRate,
+          hsnCode: product.hsnCode,
         },
       ];
     });

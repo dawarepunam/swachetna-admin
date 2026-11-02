@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Minus, Plus, ShieldCheck, ShoppingBag, Trash2, Tag, CheckCircle2, X } from "lucide-react";
-import { formatCurrency, products as staticCatalog } from "../../data/products";
+import { formatCurrency, products as staticCatalog, getProductGst } from "../../data/products";
 import { useStore } from "../../context/StoreContext";
 import ProductArtwork from "../../components/products/ProductArtwork/ProductArtwork";
 import { useState, useEffect } from "react";
@@ -261,16 +261,34 @@ export default function CartPage() {
                 )}
               </div>
 
-              <div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
-              {appliedCoupon && (
-                <div style={{ color: "#1a8f4c" }}>
-                  <span>Discount ({appliedCoupon.code})</span>
-                  <strong>-{formatCurrency(discountAmount)}</strong>
-                </div>
-              )}
-              <div><span>Estimated shipping</span><strong>{shipping ? formatCurrency(shipping) : "Free"}</strong></div>
-              <small>{subtotal < 1500 ? `Free shipping estimate over ${formatCurrency(1500)}.` : "Free shipping estimate applied."}</small>
-              <div className={styles.total}><span>Total</span><strong>{formatCurrency(finalTotal)}</strong></div>
+              {(() => {
+                const totalGst = lines.reduce((acc, line) => {
+                  const p = line.product;
+                  const tax = getProductGst(p);
+                  const linePrice = p.price * line.quantity;
+                  const itemGst = (linePrice * tax.rate) / (100 + tax.rate);
+                  return acc + itemGst;
+                }, 0);
+                const netAmount = Math.max(0, subtotal - Math.round(totalGst));
+                return (
+                  <>
+                    <div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
+                    <div style={{ fontSize: "12px", color: "#6c5979", display: "flex", justifyContent: "space-between" }}>
+                      <span>Includes GST (CGST + SGST)</span>
+                      <strong>₹{Math.round(totalGst)}</strong>
+                    </div>
+                    {appliedCoupon && (
+                      <div style={{ color: "#1a8f4c" }}>
+                        <span>Discount ({appliedCoupon.code})</span>
+                        <strong>-{formatCurrency(discountAmount)}</strong>
+                      </div>
+                    )}
+                    <div><span>Estimated shipping</span><strong>{shipping ? formatCurrency(shipping) : "Free"}</strong></div>
+                    <small>{subtotal < 1500 ? `Free shipping estimate over ${formatCurrency(1500)}.` : "Free shipping estimate applied."}</small>
+                    <div className={styles.total}><span>Total</span><strong>{formatCurrency(finalTotal)}</strong></div>
+                  </>
+                );
+              })()}
               <Link className={styles.checkout} href="/checkout">Continue to checkout <ArrowRight size={17} /></Link>
               <p className={styles.notice}><ShieldCheck size={15} /> 100% Safe, Secure &amp; Handcrafted with care.</p>
             </aside>

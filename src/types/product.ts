@@ -39,4 +39,6 @@ export interface Product {
   sizes?: string[]; // Multiple sizes/weights e.g. ["250g", "500g", "1kg"] or ["Small", "Standard"]
   variants?: ProductVariant[]; // Nykaa-style shade variants each with its own photos
   reviews?: ProductReview[];
+  gstRate?: number; // GST percentage e.g. 0, 5, 12, 18
+  hsnCode?: string; // HSN Code e.g. "6305", "2106", "6912"
 }

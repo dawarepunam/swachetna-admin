@@ -378,6 +378,8 @@ export const categories = [
     image: "/images/collections/food-ngo/traditional-pickles/mango/mango-pickle-jar-authentic.jpg",
     count: products.filter((p) => p.category === "Food & NGO Products").length,
     subcategories: ["Traditional Pickles", "Nutritious Sweets", "Handmade Papads", "Spices & Masala"],
+    gstRate: 5,
+    hsnCode: "2106",
   },
   {
     slug: "home-living",
@@ -386,6 +388,8 @@ export const categories = [
     image: "/images/collections/home-living/decor-pottery/terracotta-vase-front.jpg",
     count: products.filter((p) => p.category === "Home & Living").length,
     subcategories: ["Decor & Pottery", "Kitchen & Dining", "Table Linen"],
+    gstRate: 12,
+    hsnCode: "6912",
   },
   {
     slug: "gifting",
@@ -394,6 +398,8 @@ export const categories = [
     image: "/images/collections/gifting/festive-hampers/festive-hamper-main.jpg",
     count: products.filter((p) => p.category === "Gifting").length,
     subcategories: ["Festive Hampers", "Mini Gift Sets"],
+    gstRate: 12,
+    hsnCode: "9602",
   },
   {
     slug: "collections",
@@ -402,8 +408,30 @@ export const categories = [
     image: "/images/collections/collections/jute-cotton-bags/golden-natural/golden-jute-front.jpg",
     count: products.filter((p) => p.category === "Collections").length,
     subcategories: ["Jute & Cotton Bags", "Morning Rituals"],
+    gstRate: 5,
+    hsnCode: "6305",
   },
 ];
+
+export function getProductGst(product: Product, categoryGstMap?: Record<string, number>): { rate: number; hsn: string } {
+  if (typeof product.gstRate === "number") {
+    return { rate: product.gstRate, hsn: product.hsnCode || "9999" };
+  }
+  const catName = (product.category || "").toLowerCase();
+  if (categoryGstMap && categoryGstMap[product.category] !== undefined) {
+    return { rate: categoryGstMap[product.category], hsn: product.hsnCode || "9999" };
+  }
+  if (catName.includes("food") || catName.includes("sweet") || catName.includes("pickle")) {
+    return { rate: 5, hsn: product.hsnCode || "2106" };
+  }
+  if (catName.includes("bag") || catName.includes("jute") || catName.includes("cotton")) {
+    return { rate: 5, hsn: product.hsnCode || "6305" };
+  }
+  if (catName.includes("home") || catName.includes("pottery") || catName.includes("ceramic")) {
+    return { rate: 12, hsn: product.hsnCode || "6912" };
+  }
+  return { rate: 12, hsn: product.hsnCode || "9602" };
+}
 
 export function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IN", {

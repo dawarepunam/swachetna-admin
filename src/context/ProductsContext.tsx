@@ -12,6 +12,8 @@ export interface CategoryItem {
   image?: string;
   count?: number;
   subcategories?: string[];
+  gstRate?: number;
+  hsnCode?: string;
 }
 
 export interface AdminContentData {
@@ -105,6 +107,8 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
             sizes: typeof p.sizes === "string" ? p.sizes.split(",").map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(p.sizes) ? p.sizes : []),
             variants: Array.isArray(p.variants) ? p.variants : (typeof p.variants === 'string' ? (() => { try { return JSON.parse(p.variants); } catch { return []; } })() : []),
             reviews: Array.isArray(p.reviews) ? p.reviews : [],
+            gstRate: p.gstRate !== undefined ? Number(p.gstRate) : undefined,
+            hsnCode: p.hsnCode || undefined,
           }));
 
           // Test किंवा placeholder products (जसे की Scented Candle, Charcoal Soap) fallback authentic catalog ला override करू नयेत
@@ -147,6 +151,8 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
               : (c.subcategories || []),
             image: `/images/categories/${c.slug === "home-living" ? "home" : c.slug === "gifting" ? "gifting" : "collection"}.svg`,
             count: formattedProducts.filter((p) => p.category === c.name).length,
+            gstRate: c.gstRate !== undefined ? Number(c.gstRate) : undefined,
+            hsnCode: c.hsnCode || undefined,
           }));
           setCategories(formattedCategories);
         }

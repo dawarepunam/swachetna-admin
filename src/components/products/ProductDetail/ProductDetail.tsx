@@ -21,7 +21,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import type { Product, ProductReview } from "../../../types/product";
-import { formatCurrency, products } from "../../../data/products";
+import { formatCurrency, products, getProductGst } from "../../../data/products";
 import { useStore } from "../../../context/StoreContext";
 import ProductArtwork from "../ProductArtwork/ProductArtwork";
 import ProductGrid from "../ProductGrid/ProductGrid";
@@ -330,7 +330,22 @@ export default function ProductDetail({ product }: { product: Product }) {
                   </>
                 )}
               </div>
-              <small className={styles.taxInclusive}>Inclusive of all local taxes. Direct fair trade support.</small>
+              {(() => {
+                const taxInfo = getProductGst(product);
+                const gstAmount = Math.round((product.price * taxInfo.rate) / (100 + taxInfo.rate));
+                return (
+                  <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <small className={styles.taxInclusive} style={{ margin: 0 }}>
+                      Inclusive of all taxes ({taxInfo.rate}% GST: ₹{gstAmount})
+                    </small>
+                    {taxInfo.hsn && (
+                      <span style={{ fontSize: "11px", background: "#f3eef7", color: "#6b4984", padding: "1px 6px", borderRadius: "4px", fontWeight: 600 }}>
+                        HSN: {taxInfo.hsn}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             <p className={styles.desc}>{product.description || product.shortDescription}</p>

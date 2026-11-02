@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, type FormEvent } from "react";
 import { ArrowLeft, ArrowRight, ShieldCheck, MapPin, CheckCircle2, UserCheck } from "lucide-react";
-import { formatCurrency } from "../../data/products";
+import { formatCurrency, getProductGst } from "../../data/products";
 import { useStore } from "../../context/StoreContext";
 import { CHECKOUT_DRAFT_KEY, type CheckoutCustomer, type CheckoutDraft, type CheckoutField } from "../../types/checkout";
 import styles from "./checkout.module.css";
@@ -202,17 +202,33 @@ export default function CheckoutPage() {
 
           <aside className={styles.summary}>
             <span className={styles.step}>02 · ORDER SUMMARY</span>
-            <div><span>Items</span><strong>{cart.reduce((sum, line) => sum + line.quantity, 0)}</strong></div>
-            <div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
-            {appliedCoupon && (
-              <div style={{ color: "#166534" }}>
-                <span>Coupon ({appliedCoupon.code})</span>
-                <strong>−{formatCurrency(discountAmount)}</strong>
-              </div>
-            )}
-            <div><span>Shipping</span><strong>{shipping ? formatCurrency(shipping) : "Free"}</strong></div>
-            <small>Free shipping on orders over {formatCurrency(1500)}.</small>
-            <div className={styles.total}><span>Total</span><strong>{formatCurrency(grandTotal)}</strong></div>
+            {(() => {
+              const estimatedGst = cart.reduce((acc, line) => {
+                const price = (line as any).price || 0;
+                const rate = (line as any).gstRate !== undefined ? (line as any).gstRate : 12;
+                const lineTotal = price * line.quantity;
+                return acc + ((lineTotal * rate) / (100 + rate));
+              }, 0);
+              return (
+                <>
+                  <div><span>Items</span><strong>{cart.reduce((sum, line) => sum + line.quantity, 0)}</strong></div>
+                  <div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
+                  <div style={{ fontSize: "12px", color: "#6c5979", display: "flex", justifyContent: "space-between" }}>
+                    <span>Includes GST (CGST + SGST)</span>
+                    <strong>₹{Math.round(estimatedGst)}</strong>
+                  </div>
+                  {appliedCoupon && (
+                    <div style={{ color: "#166534" }}>
+                      <span>Coupon ({appliedCoupon.code})</span>
+                      <strong>−{formatCurrency(discountAmount)}</strong>
+                    </div>
+                  )}
+                  <div><span>Shipping</span><strong>{shipping ? formatCurrency(shipping) : "Free"}</strong></div>
+                  <small>Free shipping on orders over {formatCurrency(1500)}.</small>
+                  <div className={styles.total}><span>Total</span><strong>{formatCurrency(grandTotal)}</strong></div>
+                </>
+              );
+            })()}
             <small><ShieldCheck size={14} /> 100% Safe &amp; Encrypted Checkout.</small>
           </aside>
         </div>

@@ -221,10 +221,10 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
     notify(ok ? "Product deleted from database." : "Product removed locally.");
   };
 
-  const saveCategory = async (name: string, description: string, subcategories: string[]) => {
+  const saveCategory = async (name: string, description: string, subcategories: string[], gstRate?: number, hsnCode?: string) => {
     const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
     if (data.categories.some((category) => category.slug === slug && category.slug !== editingCategory?.slug)) { notify("A collection with that name already exists."); return false; }
-    const next: AdminCategory = { slug, name, description, subcategories };
+    const next: AdminCategory = { slug, name, description, subcategories, gstRate, hsnCode };
     const updated = editingCategory ? data.categories.map((category) => category.slug === editingCategory.slug ? next : category) : [...data.categories, next];
     data.setCategories(updated);
     setCategoryDialog(false); 
@@ -1468,7 +1468,12 @@ function CategoriesSection({ categories, products, onEdit, onDelete }: { categor
           <span className={styles.statusPill}><i /> Available</span>
           <button type="button" className={styles.iconButton} aria-label={`Delete ${category.name}`} onClick={() => onDelete(category)}><X size={16} /></button>
         </div>
-        <h2>{category.name}</h2>
+        <div style={{ display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap" }}>
+          <h2 style={{ margin: 0 }}>{category.name}</h2>
+          <span style={{ fontSize: "11px", background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "99px", fontWeight: 600 }}>
+            GST: {category.gstRate !== undefined ? `${category.gstRate}%` : "12%"} {category.hsnCode ? `(HSN: ${category.hsnCode})` : ""}
+          </span>
+        </div>
         <p>{category.description}</p>
         {subs.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", margin: "10px 0" }}>
@@ -1642,6 +1647,8 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
   const [sku, setSku] = useState(product?.sku ?? "");
   const [price, setPrice] = useState(product ? String(product.price) : "");
   const [stock, setStock] = useState(product ? String(product.stock) : "");
+  const [gstRate, setGstRate] = useState<string>(product?.gstRate !== undefined ? String(product.gstRate) : "");
+  const [hsnCode, setHsnCode] = useState<string>(product?.hsnCode || "");
   const [status, setStatus] = useState<AdminProduct["status"]>(product?.status ?? "Published");
   const [image, setImage] = useState(product?.image ?? "");
   const [galleryImages, setGalleryImages] = useState<string[]>(() => {
@@ -1678,6 +1685,8 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
       setSku(product.sku || "");
       setPrice(product.price !== undefined ? String(product.price) : "");
       setStock(product.stock !== undefined ? String(product.stock) : "");
+      setGstRate(product.gstRate !== undefined ? String(product.gstRate) : "");
+      setHsnCode(product.hsnCode || "");
       setStatus(product.status || "Published");
       setImage(product.image || "");
       const rawImgs = product.images as any;
@@ -1706,6 +1715,8 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
       setSku("");
       setPrice("");
       setStock("");
+      setGstRate("");
+      setHsnCode("");
       setStatus("Published");
       setImage("");
       setGalleryImages([]);
@@ -1812,6 +1823,8 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
         price: Number(price),
         stock: Number(stock),
         status,
+        gstRate: gstRate !== "" ? Number(gstRate) : (activeCategoryObj?.gstRate !== undefined ? activeCategoryObj.gstRate : 12),
+        hsnCode: hsnCode.trim() || activeCategoryObj?.hsnCode || "",
         image: mainImg,
         images,
         colors,
@@ -2019,6 +2032,23 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
       </label>
     </div>
     <div className={styles.formRow}><label>Price (INR)<input inputMode="decimal" min="0" step="0.01" type="number" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="0.00" required /></label><label>Stock quantity<input inputMode="numeric" min="0" step="1" type="number" value={stock} onChange={(event) => setStock(event.target.value)} placeholder="0" required /></label></div>
+    <div className={styles.formRow}>
+      <label>
+        GST Tax Rate (%)
+        <select value={gstRate} onChange={(e) => setGstRate(e.target.value)}>
+          <option value="">Default from Collection ({activeCategoryObj?.gstRate !== undefined ? `${activeCategoryObj.gstRate}%` : "12%"})</option>
+          <option value="0">0% (Nil / Exempt)</option>
+          <option value="5">5% GST (Food, Grains, Bags)</option>
+          <option value="12">12% GST (Pottery, Textiles)</option>
+          <option value="18">18% GST (Ceramics, Crafts)</option>
+          <option value="28">28% GST</option>
+        </select>
+      </label>
+      <label>
+        HSN Code
+        <input value={hsnCode} onChange={(e) => setHsnCode(e.target.value)} placeholder={activeCategoryObj?.hsnCode ? `Default: ${activeCategoryObj.hsnCode}` : "e.g. 2106, 6305"} maxLength={10} />
+      </label>
+    </div>
     {/* Dynamic Variant Field Name based on Category */}
     <div className={styles.formRow}>
       <label>
@@ -2264,7 +2294,7 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
     <div className={styles.modalActions}>{returnToProducts ? <Link href="/admin/products" className={styles.secondaryButton}>Cancel</Link> : <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={isSubmitting}>Cancel</button>}<button className={styles.primaryButton} type="submit" disabled={isSubmitting}>{isSubmitting ? "Saving..." : (product ? "Save changes" : "Add product")} <Check size={15} /></button></div>
   </form></section></div>;
 }
-function CategoryDialog({ category, onClose, onSave }: { category: AdminCategory | null; onClose: () => void; onSave: (name: string, description: string, subcategories: string[]) => boolean | Promise<boolean> }) {
+function CategoryDialog({ category, onClose, onSave }: { category: AdminCategory | null; onClose: () => void; onSave: (name: string, description: string, subcategories: string[], gstRate?: number, hsnCode?: string) => boolean | Promise<boolean> }) {
   const [name, setName] = useState(category?.name ?? "");
   const [description, setDescription] = useState(category?.description ?? "");
   const [subcategoriesText, setSubcategoriesText] = useState(
@@ -2272,6 +2302,8 @@ function CategoryDialog({ category, onClose, onSave }: { category: AdminCategory
       ? category.subcategories.join(", ") 
       : (category?.subcategories || "")
   );
+  const [gstRate, setGstRate] = useState<string>(category?.gstRate !== undefined ? String(category.gstRate) : "12");
+  const [hsnCode, setHsnCode] = useState<string>(category?.hsnCode || "");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -2283,17 +2315,44 @@ function CategoryDialog({ category, onClose, onSave }: { category: AdminCategory
           ? category.subcategories.join(", ") 
           : (category.subcategories || "")
       );
+      setGstRate(category.gstRate !== undefined ? String(category.gstRate) : "12");
+      setHsnCode(category.hsnCode || "");
     } else {
       setName("");
       setDescription("");
       setSubcategoriesText("");
+      setGstRate("12");
+      setHsnCode("");
     }
   }, [category]);
-  return <div className={styles.modalScrim} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section id="category-dialog" className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="category-dialog-title"><div className={styles.modalHead}><div><span className={styles.eyebrow}>COLLECTIONS</span><h2 id="category-dialog-title">{category ? "Edit collection" : "Add collection"}</h2><p>Give your product collection a clear name, description and sub-collections.</p></div><button type="button" className={styles.iconButton} onClick={onClose} aria-label="Close"><X size={18} /></button></div><form className={styles.modalForm} onSubmit={(event) => { 
+  return <div className={styles.modalScrim} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section id="category-dialog" className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="category-dialog-title"><div className={styles.modalHead}><div><span className={styles.eyebrow}>COLLECTIONS &amp; TAX SETTINGS</span><h2 id="category-dialog-title">{category ? "Edit collection & GST" : "Add collection & GST"}</h2><p>Configure collection name, description, GST slab rate, and HSN code for tax compliance.</p></div><button type="button" className={styles.iconButton} onClick={onClose} aria-label="Close"><X size={18} /></button></div><form className={styles.modalForm} onSubmit={(event) => { 
     event.preventDefault(); 
     const subs = subcategoriesText.split(",").map((s) => s.trim()).filter(Boolean);
-    if (!onSave(name.trim(), description.trim(), subs)) setError("A collection with this name already exists."); 
-  }}><label>Collection name<input autoFocus value={name} onChange={(event) => { setName(event.target.value); setError(""); }} placeholder="e.g. Food & NGO Products" required maxLength={80} /></label><label>Description<textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Description of this collection..." required maxLength={240} /></label><label>Sub-collections <small className={styles.formHint}>(Separate by comma, e.g. Pickle, Dryfruit Laddu, Papad)</small><input value={subcategoriesText} onChange={(event) => setSubcategoriesText(event.target.value)} placeholder="Pickle, Dryfruit Laddu, Papad, Spices" maxLength={300} /></label>{error && <p className={styles.formError} role="alert">{error}</p>}<div className={styles.modalActions}><button type="button" className={styles.secondaryButton} onClick={onClose}>Cancel</button><button type="submit" className={styles.primaryButton}>{category ? "Save changes" : "Add collection"} <Check size={15} /></button></div></form></section></div>;
+    const parsedGst = Number(gstRate);
+    if (!onSave(name.trim(), description.trim(), subs, isNaN(parsedGst) ? 12 : parsedGst, hsnCode.trim())) setError("A collection with this name already exists."); 
+  }}>
+    <label>Collection name<input autoFocus value={name} onChange={(event) => { setName(event.target.value); setError(""); }} placeholder="e.g. Food & NGO Products" required maxLength={80} /></label>
+    <div className={styles.formRow}>
+      <label>
+        Applicable GST Rate (%)
+        <select value={gstRate} onChange={(e) => setGstRate(e.target.value)}>
+          <option value="0">0% (Tax Exempt / Nil)</option>
+          <option value="5">5% GST (Pickles, Spices, Grains, Bags)</option>
+          <option value="12">12% GST (Pottery, Handmade Decor, Table Linen)</option>
+          <option value="18">18% GST (Ceramics, Crafts, Personal Care)</option>
+          <option value="28">28% GST (Luxury Items)</option>
+        </select>
+      </label>
+      <label>
+        Default HSN Code
+        <input value={hsnCode} onChange={(e) => setHsnCode(e.target.value)} placeholder="e.g. 2106, 6305, 6912" maxLength={10} />
+      </label>
+    </div>
+    <label>Description<textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Description of this collection..." required maxLength={240} /></label>
+    <label>Sub-collections <small className={styles.formHint}>(Separate by comma, e.g. Pickle, Dryfruit Laddu, Papad)</small><input value={subcategoriesText} onChange={(event) => setSubcategoriesText(event.target.value)} placeholder="Pickle, Dryfruit Laddu, Papad, Spices" maxLength={300} /></label>
+    {error && <p className={styles.formError} role="alert">{error}</p>}
+    <div className={styles.modalActions}><button type="button" className={styles.secondaryButton} onClick={onClose}>Cancel</button><button type="submit" className={styles.primaryButton}>{category ? "Save changes" : "Add collection"} <Check size={15} /></button></div>
+  </form></section></div>;
 }
 
 function SubcollectionDialog({ categories, onClose, onSave }: { categories: AdminCategory[]; onClose: () => void; onSave: (parentCategoryName: string, subName: string) => boolean | Promise<boolean> }) {

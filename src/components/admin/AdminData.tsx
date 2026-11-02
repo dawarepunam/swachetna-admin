@@ -28,8 +28,17 @@ export type AdminProduct = {
     stock?: number;
   }>;
   reviews?: ProductReview[];
+  gstRate?: number;
+  hsnCode?: string;
 };
-export type AdminCategory = { slug: string; name: string; description: string; subcategories?: string[] | string };
+export type AdminCategory = {
+  slug: string;
+  name: string;
+  description: string;
+  subcategories?: string[] | string;
+  gstRate?: number;
+  hsnCode?: string;
+};
 export type OrderItem = { id?: string; name: string; price: number; quantity: number; image?: string; sku?: string };
 export type AdminOrder = {
   id: string;
