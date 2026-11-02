@@ -18,6 +18,25 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const [currentUser, setCurrentUser] = useState<{ name?: string; email?: string } | null>(null);
+
+  useEffect(() => {
+    const syncUser = () => {
+      try {
+        const u = localStorage.getItem("swachetna-demo-user");
+        setCurrentUser(u ? JSON.parse(u) : null);
+      } catch {
+        setCurrentUser(null);
+      }
+    };
+    syncUser();
+    window.addEventListener("storage", syncUser);
+    window.addEventListener("swachetna-auth-changed", syncUser);
+    return () => {
+      window.removeEventListener("storage", syncUser);
+      window.removeEventListener("swachetna-auth-changed", syncUser);
+    };
+  }, []);
 
   // Live Instant Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -381,8 +400,28 @@ export default function Header() {
               {mobileSearchVisible ? <X size={19} /> : <Search size={19} />}
             </button>
 
-            <Link href="/account/login" className={`${styles.actionButton} ${styles.mobileHidden}`} aria-label="Account">
+            <Link
+              href={currentUser ? "/account/profile" : "/account/login"}
+              className={`${styles.actionButton} ${styles.mobileHidden}`}
+              aria-label={currentUser ? `Account of ${currentUser.name}` : "Account Login"}
+              title={currentUser ? `Logged in as ${currentUser.name}` : "Sign in / Register"}
+              style={{ position: "relative" }}
+            >
               <UserRound size={19} />
+              {currentUser && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "6px",
+                    right: "6px",
+                    width: "7px",
+                    height: "7px",
+                    borderRadius: "50%",
+                    background: "#10b981",
+                    border: "1.5px solid #fff"
+                  }}
+                />
+              )}
             </Link>
             <Link
               href="/wishlist"

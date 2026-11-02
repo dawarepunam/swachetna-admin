@@ -135,7 +135,7 @@ export default function MobileNavigation({
           <Link href="/wishlist" onClick={onClose} className={styles.navMainLink}>
             <span>06</span> Wishlist
           </Link>
-          <Link href="/account/login" onClick={onClose} className={styles.navMainLink}>
+          <Link href="/account/profile" onClick={onClose} className={styles.navMainLink}>
             <span>07</span> My account
           </Link>
           <Link href="/cart" onClick={onClose} className={styles.navMainLink}>

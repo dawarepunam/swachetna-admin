@@ -23,7 +23,13 @@ import {
   ShieldCheck,
   ChevronRight,
   ExternalLink,
-  Plus
+  Plus,
+  Mail,
+  Phone,
+  Edit2,
+  Award,
+  Sparkles,
+  ShoppingBasket
 } from "lucide-react";
 import styles from "./AccountScreen.module.css";
 import { formatCurrency } from "../../../data/products";
@@ -54,7 +60,9 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
         (p.name && p.name.toLowerCase() === wLower)
     );
   }).length;
+
   const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,6 +75,9 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
   const [addressDraft, setAddressDraft] = useState({ line: "", city: "", state: "", postalCode: "" });
   const [savedAddress, setSavedAddress] = useState<any>(null);
 
+  const isAuthMode = mode === "login" || mode === "register" || mode === "forgot";
+
+  // Check login session on mount
   useEffect(() => {
     let currentUser: User | null = null;
     try {
@@ -81,9 +92,11 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
       }
     } catch {
       setUser(null);
+    } finally {
+      setAuthChecked(true);
     }
 
-    // Load orders: Live from Strapi first, then localStorage
+    // Load orders
     async function loadAccountOrders() {
       setLoadingOrders(true);
       const localOrders: AccountOrder[] = [];
@@ -127,7 +140,9 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
             localOrders.forEach((o) => combinedMap.set(o.reference.toLowerCase(), o));
             mappedStrapi.forEach((o) => combinedMap.set(o.reference.toLowerCase(), o));
 
-            const finalOrders = [...combinedMap.values()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            const finalOrders = [...combinedMap.values()].sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
             setOrders(finalOrders);
             setLoadingOrders(false);
             return;
@@ -143,6 +158,13 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
 
     loadAccountOrders();
   }, []);
+
+  // Amazon/Nykaa Rule: If user is already logged in and lands on login/register/forgot, automatically redirect to profile!
+  useEffect(() => {
+    if (authChecked && user && isAuthMode) {
+      router.replace("/account/profile");
+    }
+  }, [authChecked, user, isAuthMode, router]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -187,10 +209,11 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
               jwt: resData.jwt,
             };
             localStorage.setItem("swachetna-demo-user", JSON.stringify(userData));
+            window.dispatchEvent(new Event("swachetna-auth-changed"));
             setUser(userData);
             setMessage("Welcome back! Signed in successfully.");
             loggedIn = true;
-            setTimeout(() => router.push("/account/profile"), 800);
+            setTimeout(() => router.replace("/account/profile"), 600);
           } else if (resData.error && !resData.error.includes("connect") && !resData.error.includes("fetch")) {
             setMessage(resData.error);
             setIsError(true);
@@ -198,19 +221,21 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
             return;
           }
         } catch {
-          /* Fallback gracefully */
+          /* Fallback gracefully to offline/local session */
         }
 
         if (!loggedIn) {
+          const cleanName = email.split("@")[0].replace(/[^a-zA-Z0-9]/g, " ");
           const localUser: User = {
-            name: email.split("@")[0].replace(/[^a-zA-Z0-9]/g, " "),
-            email,
-            phone: phone || "",
+            name: cleanName.charAt(0).toUpperCase() + cleanName.slice(1),
+            email: email.trim().toLowerCase(),
+            phone: phone || "+91 98765 43210",
           };
           localStorage.setItem("swachetna-demo-user", JSON.stringify(localUser));
+          window.dispatchEvent(new Event("swachetna-auth-changed"));
           setUser(localUser);
           setMessage("Welcome back! Signed in successfully.");
-          setTimeout(() => router.push("/account/profile"), 800);
+          setTimeout(() => router.replace("/account/profile"), 600);
         }
       } else if (mode === "register") {
         let registered = false;
@@ -234,10 +259,11 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
               jwt: resData.jwt,
             };
             localStorage.setItem("swachetna-demo-user", JSON.stringify(userData));
+            window.dispatchEvent(new Event("swachetna-auth-changed"));
             setUser(userData);
             setMessage("Account created successfully! Welcome to Swachetna.");
             registered = true;
-            setTimeout(() => router.push("/account/profile"), 900);
+            setTimeout(() => router.replace("/account/profile"), 700);
           } else if (resData.error && !resData.error.includes("connect") && !resData.error.includes("fetch")) {
             setMessage(resData.error);
             setIsError(true);
@@ -252,20 +278,41 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
           const localUser: User = {
             name: name.trim(),
             email: email.trim().toLowerCase(),
-            phone: phone.trim(),
+            phone: phone.trim() || "+91 98765 43210",
           };
           localStorage.setItem("swachetna-demo-user", JSON.stringify(localUser));
+          window.dispatchEvent(new Event("swachetna-auth-changed"));
           setUser(localUser);
           setMessage("Account created successfully! Welcome to Swachetna.");
-          setTimeout(() => router.push("/account/profile"), 900);
+          setTimeout(() => router.replace("/account/profile"), 700);
         }
       }
-    } catch (err: any) {
+    } catch {
       setMessage("An unexpected error occurred. Please try again.");
       setIsError(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQuickDemoLogin = () => {
+    const demoUser: User = {
+      name: "Aditi Sharma",
+      email: "aditi.sharma@swachetna.org",
+      phone: "+91 98200 12345",
+    };
+    localStorage.setItem("swachetna-demo-user", JSON.stringify(demoUser));
+    window.dispatchEvent(new Event("swachetna-auth-changed"));
+    setUser(demoUser);
+    setMessage("Signed in as Aditi Sharma.");
+    setTimeout(() => router.replace("/account/profile"), 400);
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem("swachetna-demo-user");
+    window.dispatchEvent(new Event("swachetna-auth-changed"));
+    setUser(null);
+    router.replace("/account/login");
   };
 
   const handleSaveAddress = (e: FormEvent) => {
@@ -277,7 +324,18 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
     setMessage("Address saved successfully!");
   };
 
-  const isAuthMode = mode === "login" || mode === "register" || mode === "forgot";
+  // If already logged in and on an auth route, show smooth redirect loader
+  if (authChecked && user && isAuthMode) {
+    return (
+      <main className={styles.page}>
+        <div style={{ textAlign: "center", padding: "60px 20px" }}>
+          <Loader2 size={32} className="animate-spin" style={{ margin: "0 auto 16px", color: "#6b3b82" }} />
+          <h2 style={{ fontSize: "20px", color: "#321d3f" }}>Redirecting to your account dashboard...</h2>
+          <p style={{ color: "#7a6e83", fontSize: "14px" }}>Logged in as {user.name} ({user.email})</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className={styles.page}>
@@ -294,396 +352,223 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
           )}
         </div>
 
-        {/* ================= USER AUTHENTICATED E-COMMERCE HUB (AMAZON / NYKAA STYLE) ================= */}
+        {/* ================= USER AUTHENTICATED DASHBOARD (AMAZON / NYKAA STYLE) ================= */}
         {!isAuthMode ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-            {/* Top User Greeting & Summary Card */}
-            <div style={{
-              background: "linear-gradient(135deg, #371d47 0%, #4f2a66 100%)",
-              color: "white",
-              borderRadius: "20px",
-              padding: "28px 32px",
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "20px",
-              boxShadow: "0 12px 30px rgba(55, 29, 71, 0.15)"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
-                <div style={{
-                  width: "60px",
-                  height: "60px",
-                  borderRadius: "50%",
-                  background: "rgba(255,255,255,0.15)",
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: "22px",
-                  fontWeight: "bold",
-                  border: "2px solid rgba(255,255,255,0.3)"
-                }}>
+          <div className={styles.accountHubWrapper}>
+            {/* Nykaa/Amazon Profile Top Hero Banner */}
+            <div className={styles.accountHeroCard}>
+              <div className={styles.accountUserInfo}>
+                <div className={styles.userAvatarCircle}>
                   {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
                 </div>
                 <div>
-                  <h1 style={{ fontSize: "24px", margin: 0, fontWeight: "600" }}>
-                    Hello, {user?.name || "Valued Customer"} 👋
+                  <div className={styles.welcomeTag}>
+                    <Sparkles size={13} />
+                    <span>Swachetna Patron Member</span>
+                  </div>
+                  <h1 className={styles.userNameHeading}>
+                    Hello, {user?.name || "Valued Customer"}
                   </h1>
-                  <p style={{ margin: "4px 0 0", color: "#dec7ea", fontSize: "13px" }}>
-                    {user?.email || "Signed in account"} {user?.phone ? `· ${user.phone}` : ""}
+                  <p className={styles.userSubDetails}>
+                    <Mail size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                    {user?.email || "customer@swachetna.org"}
+                    {user?.phone && (
+                      <>
+                        <span style={{ margin: "0 8px", opacity: 0.5 }}>•</span>
+                        <Phone size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                        {user.phone}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
 
-              {/* Quick Hub Stats */}
-              <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-                <Link href="/account/orders" style={{
-                  background: "rgba(255,255,255,0.12)",
-                  padding: "10px 18px",
-                  borderRadius: "12px",
-                  color: "#fff",
-                  textDecoration: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  fontSize: "13px"
-                }}>
+              {/* Quick Hub Stats Badges */}
+              <div className={styles.accountStatsRow}>
+                <Link href="/account/orders" className={styles.statBadge}>
                   <PackageCheck size={18} />
                   <div>
-                    <strong style={{ display: "block", fontSize: "15px" }}>{orders.length}</strong>
-                    <span style={{ fontSize: "11px", color: "#dec7ea" }}>Orders</span>
+                    <strong>{orders.length}</strong>
+                    <span>Orders</span>
                   </div>
                 </Link>
 
-                <Link href="/wishlist" style={{
-                  background: "rgba(255,255,255,0.12)",
-                  padding: "10px 18px",
-                  borderRadius: "12px",
-                  color: "#fff",
-                  textDecoration: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  fontSize: "13px"
-                }}>
+                <Link href="/wishlist" className={styles.statBadge}>
                   <Heart size={18} />
                   <div>
-                    <strong style={{ display: "block", fontSize: "15px" }}>{validWishlistCount}</strong>
-                    <span style={{ fontSize: "11px", color: "#dec7ea" }}>Wishlist</span>
+                    <strong>{validWishlistCount}</strong>
+                    <span>Wishlist</span>
                   </div>
                 </Link>
 
-                <Link href="/cart" style={{
-                  background: "rgba(255,255,255,0.12)",
-                  padding: "10px 18px",
-                  borderRadius: "12px",
-                  color: "#fff",
-                  textDecoration: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  fontSize: "13px"
-                }}>
+                <Link href="/cart" className={styles.statBadge}>
                   <ShoppingBag size={18} />
                   <div>
-                    <strong style={{ display: "block", fontSize: "15px" }}>{cartCount}</strong>
-                    <span style={{ fontSize: "11px", color: "#dec7ea" }}>Bag</span>
+                    <strong>{cartCount}</strong>
+                    <span>Bag</span>
                   </div>
                 </Link>
 
                 <button
                   type="button"
-                  onClick={() => {
-                    localStorage.removeItem("swachetna-demo-user");
-                    setUser(null);
-                    router.push("/account/login");
-                  }}
-                  style={{
-                    background: "rgba(255,255,255,0.12)",
-                    border: "none",
-                    color: "#ffcdd2",
-                    padding: "10px 16px",
-                    borderRadius: "12px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    fontSize: "13px",
-                    fontWeight: "600"
-                  }}
-                  title="Sign Out"
+                  onClick={handleSignOut}
+                  className={styles.signOutBtn}
+                  title="Sign Out of Account"
                 >
-                  <LogOut size={16} /> Sign out
+                  <LogOut size={16} />
+                  <span>Sign out</span>
                 </button>
               </div>
             </div>
 
             {/* Amazon / Nykaa Grid Shortcuts */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: "16px"
-            }}>
-              <Link href="/account/orders" style={{
-                background: "#fff",
-                border: mode === "orders" ? "2px solid #5d3570" : "1px solid #ebe4ef",
-                borderRadius: "16px",
-                padding: "20px",
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
-                transition: "all 0.2s"
-              }}>
-                <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: "#f3eaf7", color: "#5d3570", display: "grid", placeItems: "center" }}>
+            <div className={styles.hubGridShortcuts}>
+              <Link
+                href="/account/orders"
+                className={`${styles.shortcutTile} ${mode === "orders" ? styles.shortcutActive : ""}`}
+              >
+                <div className={`${styles.shortcutIcon} ${styles.iconPurple}`}>
                   <PackageCheck size={22} />
                 </div>
-                <div>
-                  <strong style={{ color: "#321d3f", fontSize: "15px", display: "block" }}>Your Orders</strong>
-                  <span style={{ color: "#7a6e83", fontSize: "12px" }}>Track, return, or buy again</span>
+                <div className={styles.shortcutText}>
+                  <strong>Your Orders</strong>
+                  <span>Track status, view receipts &amp; history</span>
                 </div>
               </Link>
 
-              <Link href="/track-order" style={{
-                background: "#fff",
-                border: "1px solid #ebe4ef",
-                borderRadius: "16px",
-                padding: "20px",
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.03)"
-              }}>
-                <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: "#e8f0fe", color: "#1967d2", display: "grid", placeItems: "center" }}>
+              <Link href="/track-order" className={styles.shortcutTile}>
+                <div className={`${styles.shortcutIcon} ${styles.iconBlue}`}>
                   <Truck size={22} />
                 </div>
-                <div>
-                  <strong style={{ color: "#321d3f", fontSize: "15px", display: "block" }}>Live Tracking</strong>
-                  <span style={{ color: "#7a6e83", fontSize: "12px" }}>Shipment &amp; courier status</span>
+                <div className={styles.shortcutText}>
+                  <strong>Live Shipment Tracking</strong>
+                  <span>Check real-time dispatch updates</span>
                 </div>
               </Link>
 
-              <Link href="/account/addresses" style={{
-                background: "#fff",
-                border: mode === "addresses" ? "2px solid #5d3570" : "1px solid #ebe4ef",
-                borderRadius: "16px",
-                padding: "20px",
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.03)"
-              }}>
-                <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: "#fef3e2", color: "#b06000", display: "grid", placeItems: "center" }}>
+              <Link
+                href="/account/addresses"
+                className={`${styles.shortcutTile} ${mode === "addresses" ? styles.shortcutActive : ""}`}
+              >
+                <div className={`${styles.shortcutIcon} ${styles.iconOrange}`}>
                   <MapPin size={22} />
                 </div>
-                <div>
-                  <strong style={{ color: "#321d3f", fontSize: "15px", display: "block" }}>Saved Addresses</strong>
-                  <span style={{ color: "#7a6e83", fontSize: "12px" }}>Manage delivery locations</span>
+                <div className={styles.shortcutText}>
+                  <strong>Saved Addresses</strong>
+                  <span>Delivery addresses &amp; PIN codes</span>
                 </div>
               </Link>
 
-              <Link href="/contact" style={{
-                background: "#fff",
-                border: "1px solid #ebe4ef",
-                borderRadius: "16px",
-                padding: "20px",
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.03)"
-              }}>
-                <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: "#eef8f2", color: "#1a8f4c", display: "grid", placeItems: "center" }}>
-                  <Headphones size={22} />
+              <Link
+                href="/account/profile"
+                className={`${styles.shortcutTile} ${mode === "profile" ? styles.shortcutActive : ""}`}
+              >
+                <div className={`${styles.shortcutIcon} ${styles.iconGreen}`}>
+                  <ShieldCheck size={22} />
                 </div>
-                <div>
-                  <strong style={{ color: "#321d3f", fontSize: "15px", display: "block" }}>Customer Support</strong>
-                  <span style={{ color: "#7a6e83", fontSize: "12px" }}>Contact helpdesk &amp; FAQs</span>
+                <div className={styles.shortcutText}>
+                  <strong>Login &amp; Security</strong>
+                  <span>Name, email, phone &amp; preferences</span>
                 </div>
               </Link>
             </div>
 
-            {/* Dynamic Content Pane based on Sub-route */}
-            <div style={{
-              background: "#fff",
-              borderRadius: "20px",
-              padding: "32px",
-              border: "1px solid #ebe4ef",
-              boxShadow: "0 6px 20px rgba(0,0,0,0.02)"
-            }}>
+            {/* Main Content Workspace Card */}
+            <div className={styles.accountContentCard}>
               {mode === "orders" ? (
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px" }}>
+                  <div className={styles.cardHeaderFlex}>
                     <div>
-                      <h2 style={{ fontSize: "20px", color: "#321d3f", margin: 0 }}>Your Orders &amp; Handcrafted Purchases</h2>
-                      <p style={{ margin: "4px 0 0", color: "#7a6e83", fontSize: "13px" }}>
-                        Real-time status synced with Swachetna Foundation backend
-                      </p>
+                      <h2>Order History ({orders.length})</h2>
+                      <p>View past orders, track dispatch progress, or view receipts.</p>
                     </div>
-                    <Link href="/shop" style={{ color: "#5d3570", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>
-                      Continue Shopping →
+                    <Link href="/shop" className={styles.shopMoreBtn}>
+                      <ShoppingBasket size={15} /> Continue Shopping
                     </Link>
                   </div>
 
                   {loadingOrders ? (
-                    <p style={{ color: "#7a6e83", textAlign: "center", padding: "40px 0" }}>Loading your orders from Strapi...</p>
+                    <div style={{ textAlign: "center", padding: "40px 0" }}>
+                      <Loader2 size={28} className="animate-spin" style={{ margin: "0 auto 12px", color: "#5d3570" }} />
+                      <p style={{ color: "#7a6e83", fontSize: "14px" }}>Loading your orders...</p>
+                    </div>
                   ) : orders.length > 0 ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                    <div className={styles.orderListContainer}>
                       {orders.map((ord) => {
-                        const st = ord.status || "Pending";
+                        const dateFormatted = new Date(ord.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        });
+                        const isDelivered = ord.status?.toLowerCase().includes("delivered");
+                        const isShipped = ord.status?.toLowerCase().includes("shipped");
+
                         return (
-                          <div
-                            key={ord.reference}
-                            style={{
-                              border: "1px solid #e8e1ec",
-                              borderRadius: "14px",
-                              overflow: "hidden"
-                            }}
-                          >
-                            {/* Order Header */}
-                            <div style={{
-                              background: "#f9f7fa",
-                              padding: "14px 20px",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              flexWrap: "wrap",
-                              gap: "12px",
-                              borderBottom: "1px solid #e8e1ec",
-                              fontSize: "12px"
-                            }}>
-                              <div style={{ display: "flex", gap: "24px" }}>
-                                <div>
-                                  <span style={{ color: "#8a7e93", display: "block" }}>ORDER PLACED</span>
-                                  <strong>{new Date(ord.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong>
-                                </div>
-                                <div>
-                                  <span style={{ color: "#8a7e93", display: "block" }}>TOTAL AMOUNT</span>
-                                  <strong>{formatCurrency(ord.total)}</strong>
-                                </div>
-                                <div>
-                                  <span style={{ color: "#8a7e93", display: "block" }}>PAYMENT</span>
-                                  <strong>{ord.paymentMethod || "Online"}</strong>
-                                </div>
+                          <div key={ord.reference} className={styles.orderCardItem}>
+                            <div className={styles.orderCardHead}>
+                              <div>
+                                <span className={styles.orderLabel}>ORDER PLACED</span>
+                                <strong>{dateFormatted}</strong>
                               </div>
-                              <div style={{ textAlign: "right" }}>
-                                <span style={{ color: "#8a7e93", display: "block" }}>ORDER # {ord.reference}</span>
-                                <Link href={`/track-order?ref=${ord.reference}`} style={{ color: "#5d3570", fontWeight: "600", textDecoration: "none" }}>
-                                  View Live Details
-                                </Link>
+                              <div>
+                                <span className={styles.orderLabel}>TOTAL</span>
+                                <strong>{formatCurrency(ord.total)}</strong>
+                              </div>
+                              <div>
+                                <span className={styles.orderLabel}>SHIP TO</span>
+                                <strong>{user?.name || "Customer"}</strong>
+                              </div>
+                              <div className={styles.orderIdBlock}>
+                                <span className={styles.orderLabel}>ORDER # {ord.reference}</span>
+                                <span
+                                  className={styles.statusPill}
+                                  style={{
+                                    background: isDelivered ? "#eef8f2" : isShipped ? "#e8f0fe" : "#fbf2e2",
+                                    color: isDelivered ? "#1a8f4c" : isShipped ? "#1967d2" : "#995200",
+                                  }}
+                                >
+                                  {ord.status || "Confirmed"}
+                                </span>
                               </div>
                             </div>
 
-                            {/* Order Body */}
-                            <div style={{ padding: "20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px" }}>
-                              <div style={{ flex: "1 1 360px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
-                                  <span style={{
-                                    fontSize: "12px",
-                                    fontWeight: "700",
-                                    padding: "4px 12px",
-                                    borderRadius: "99px",
-                                    background: st === "Delivered" ? "#eef8f2" : st === "Shipped" ? "#e8f0fe" : "#fff8e6",
-                                    color: st === "Delivered" ? "#1a8f4c" : st === "Shipped" ? "#1967d2" : "#b06000",
-                                    border: "1px solid currentColor"
-                                  }}>
-                                    ● {st.toUpperCase()}
-                                  </span>
-                                  <span style={{ color: "#6a5e73", fontSize: "13px" }}>
-                                    {st === "Delivered" ? "Package was delivered safely" : st === "Shipped" ? "Package is in transit with courier" : "Preparing handcrafted order with care"}
-                                  </span>
-                                </div>
-
-                                {/* Amazon Style Item Showcase with Thumbnails */}
+                            <div className={styles.orderCardBody}>
+                              <div className={styles.orderItemsList}>
                                 {ord.items && ord.items.length > 0 ? (
-                                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                                    {ord.items.map((it, idx) => (
-                                      <div key={idx} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                                        {/* Product Thumbnail Image */}
-                                        <div style={{
-                                          width: "64px",
-                                          height: "64px",
-                                          borderRadius: "10px",
-                                          border: "1px solid #ebdfee",
-                                          background: "#fbf9fc",
-                                          overflow: "hidden",
-                                          flexShrink: 0,
-                                          display: "grid",
-                                          placeItems: "center"
-                                        }}>
-                                          {it.image ? (
-                                            <img
-                                              src={it.image}
-                                              alt={it.name}
-                                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                            />
-                                          ) : (
-                                            <ShoppingBag size={24} style={{ color: "#a597ad" }} />
-                                          )}
+                                  ord.items.map((it, idx) => (
+                                    <div key={idx} className={styles.orderProductRow}>
+                                      {it.image ? (
+                                        <img src={it.image} alt={it.name} className={styles.orderProductThumb} />
+                                      ) : (
+                                        <div className={styles.orderProductThumbPlaceholder}>
+                                          <ShoppingBag size={18} />
                                         </div>
-
-                                        <div>
-                                          <div style={{ color: "#3a2d42", fontSize: "14px", fontWeight: "600" }}>
-                                            {it.name}
-                                          </div>
-                                          <div style={{ color: "#7a6e83", fontSize: "12px", marginTop: "2px" }}>
-                                            Qty: <strong>{it.quantity}</strong> · {formatCurrency(it.price * it.quantity)}
-                                          </div>
-                                          <Link
-                                            href="/shop"
-                                            style={{
-                                              color: "#5d3570",
-                                              fontSize: "11px",
-                                              fontWeight: "600",
-                                              textDecoration: "none",
-                                              display: "inline-block",
-                                              marginTop: "3px"
-                                            }}
-                                          >
-                                            Buy it again →
-                                          </Link>
+                                      )}
+                                      <div>
+                                        <strong className={styles.orderProductName}>{it.name}</strong>
+                                        <div className={styles.orderProductQty}>
+                                          Qty: {it.quantity} &nbsp;•&nbsp; {formatCurrency(it.price)}
                                         </div>
                                       </div>
-                                    ))}
-                                  </div>
+                                    </div>
+                                  ))
                                 ) : (
-                                  <div style={{ color: "#3a2d42", fontSize: "13px" }}>Swachetna Foundation Handcrafted Products</div>
+                                  <div style={{ color: "#3a2d42", fontSize: "14px" }}>
+                                    Swachetna Foundation Handcrafted Products
+                                  </div>
                                 )}
                               </div>
 
-                              <div style={{ display: "flex", flexDirection: "column", gap: "10px", minWidth: "160px" }}>
+                              <div className={styles.orderActionsCol}>
                                 <Link
                                   href={`/track-order?ref=${ord.reference}`}
-                                  style={{
-                                    background: "#5d3570",
-                                    color: "#fff",
-                                    padding: "10px 18px",
-                                    borderRadius: "8px",
-                                    fontSize: "13px",
-                                    fontWeight: "600",
-                                    textDecoration: "none",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: "6px"
-                                  }}
+                                  className={styles.trackPackageBtn}
                                 >
                                   <Truck size={15} /> Track Package
                                 </Link>
                                 <Link
                                   href={`/order-confirmation?ref=${ord.reference}`}
-                                  style={{
-                                    border: "1px solid #d4c7d9",
-                                    color: "#5d3570",
-                                    padding: "9px 16px",
-                                    borderRadius: "8px",
-                                    fontSize: "13px",
-                                    fontWeight: "600",
-                                    textDecoration: "none",
-                                    textAlign: "center"
-                                  }}
+                                  className={styles.viewReceiptBtn}
                                 >
                                   View Receipt
                                 </Link>
@@ -694,19 +579,13 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
                       })}
                     </div>
                   ) : (
-                    <div style={{ textAlign: "center", padding: "40px 0" }}>
-                      <p style={{ color: "#8a7e93", fontSize: "14px" }}>You have not placed any orders yet.</p>
-                      <Link href="/shop" style={{
-                        display: "inline-block",
-                        marginTop: "12px",
-                        background: "#5d3570",
-                        color: "white",
-                        padding: "10px 22px",
-                        borderRadius: "10px",
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        textDecoration: "none"
-                      }}>
+                    <div style={{ textAlign: "center", padding: "48px 0" }}>
+                      <PackageCheck size={48} style={{ color: "#b9a6c2", margin: "0 auto 12px" }} />
+                      <h3 style={{ fontSize: "17px", color: "#321d3f", margin: "0 0 6px" }}>No orders placed yet</h3>
+                      <p style={{ color: "#8a7e93", fontSize: "14px", margin: "0 0 18px" }}>
+                        Explore authentic organic pickles, laddus, and handcrafted rural treasures.
+                      </p>
+                      <Link href="/shop" className={styles.primaryActionButton}>
                         Explore Handcrafted Creations →
                       </Link>
                     </div>
@@ -714,154 +593,129 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
                 </div>
               ) : mode === "addresses" ? (
                 <div>
-                  <h2 style={{ fontSize: "20px", color: "#321d3f", margin: "0 0 16px" }}>Delivery Addresses</h2>
-                  <p style={{ color: "#7a6e83", fontSize: "13px", marginBottom: "20px" }}>
-                    Manage default shipping address for fast 1-click checkout.
-                  </p>
+                  <div className={styles.cardHeaderFlex}>
+                    <div>
+                      <h2>Delivery Addresses</h2>
+                      <p>Manage your default shipping addresses for fast 1-click checkout.</p>
+                    </div>
+                  </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+                  <div className={styles.addressGrid}>
                     {savedAddress ? (
-                      <div style={{ border: "2px solid #5d3570", borderRadius: "14px", padding: "20px", position: "relative" }}>
-                        <span style={{
-                          position: "absolute",
-                          top: "14px",
-                          right: "14px",
-                          fontSize: "11px",
-                          fontWeight: "700",
-                          color: "#1a8f4c",
-                          background: "#eef8f2",
-                          padding: "2px 8px",
-                          borderRadius: "99px"
-                        }}>
-                          DEFAULT
-                        </span>
-                        <strong style={{ fontSize: "15px", color: "#321d3f", display: "block" }}>{user?.name || "Customer"}</strong>
-                        <p style={{ color: "#6a5e73", fontSize: "13px", margin: "8px 0" }}>
+                      <div className={styles.addressCardActive}>
+                        <span className={styles.defaultAddressBadge}>DEFAULT ADDRESS</span>
+                        <strong className={styles.addressName}>{user?.name || "Customer"}</strong>
+                        <p className={styles.addressLines}>
                           {savedAddress.line}<br />
                           {savedAddress.city}, {savedAddress.state} {savedAddress.postalCode}
                         </p>
-                        <span style={{ color: "#8a7e93", fontSize: "12px" }}>Phone: {user?.phone || "Not specified"}</span>
+                        <span className={styles.addressPhone}>Phone: {user?.phone || "+91 98765 43210"}</span>
                       </div>
                     ) : (
-                      <div style={{ border: "1px dashed #cbbdd1", borderRadius: "14px", padding: "20px", textAlign: "center" }}>
-                        <MapPin size={28} style={{ color: "#8a7e93", margin: "0 auto 8px" }} />
-                        <p style={{ fontSize: "13px", color: "#7a6e83" }}>No address saved yet. Addresses are saved during checkout automatically.</p>
+                      <div className={styles.addressEmptyCard}>
+                        <MapPin size={32} style={{ color: "#9a8a9f", margin: "0 auto 10px" }} />
+                        <strong>No address saved yet</strong>
+                        <p>Addresses are saved during checkout automatically or you can add one below.</p>
                       </div>
                     )}
 
-                    {/* Quick Add Address Form */}
-                    <div style={{ background: "#fbf9fc", borderRadius: "14px", padding: "20px", border: "1px solid #ebdfee" }}>
-                      <strong style={{ fontSize: "14px", color: "#321d3f", display: "block", marginBottom: "12px" }}>
-                        <Plus size={15} style={{ display: "inline", verticalAlign: "middle" }} /> Add / Update Address
+                    {/* Quick Add / Update Address Card */}
+                    <div className={styles.addressFormCard}>
+                      <strong className={styles.formCardTitle}>
+                        <Plus size={16} /> Add or Update Address
                       </strong>
-                      <form onSubmit={handleSaveAddress} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <form onSubmit={handleSaveAddress} className={styles.addressForm}>
                         <input
-                          placeholder="Street Address / House / Apartment"
+                          placeholder="Street Address / House / Flat No."
                           value={addressDraft.line}
                           onChange={(e) => setAddressDraft({ ...addressDraft, line: e.target.value })}
-                          style={{ padding: "8px 12px", borderRadius: "7px", border: "1px solid #d8cedc", fontSize: "13px" }}
                           required
                         />
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                        <div className={styles.addressInputRow}>
                           <input
                             placeholder="City"
                             value={addressDraft.city}
                             onChange={(e) => setAddressDraft({ ...addressDraft, city: e.target.value })}
-                            style={{ padding: "8px 12px", borderRadius: "7px", border: "1px solid #d8cedc", fontSize: "13px" }}
                             required
                           />
                           <input
                             placeholder="State"
                             value={addressDraft.state}
                             onChange={(e) => setAddressDraft({ ...addressDraft, state: e.target.value })}
-                            style={{ padding: "8px 12px", borderRadius: "7px", border: "1px solid #d8cedc", fontSize: "13px" }}
+                            required
                           />
                         </div>
                         <input
                           placeholder="PIN Code"
                           value={addressDraft.postalCode}
                           onChange={(e) => setAddressDraft({ ...addressDraft, postalCode: e.target.value })}
-                          style={{ padding: "8px 12px", borderRadius: "7px", border: "1px solid #d8cedc", fontSize: "13px" }}
+                          required
                         />
-                        <button
-                          type="submit"
-                          style={{
-                            background: "#5d3570",
-                            color: "white",
-                            border: "none",
-                            padding: "9px 16px",
-                            borderRadius: "7px",
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            cursor: "pointer"
-                          }}
-                        >
+                        <button type="submit" className={styles.saveAddressBtn}>
                           Save Address
                         </button>
                       </form>
-                      {message && <p style={{ fontSize: "12px", color: "#166534", marginTop: "8px" }}>{message}</p>}
+                      {message && <p className={styles.addressSuccessNote}>{message}</p>}
                     </div>
                   </div>
                 </div>
               ) : (
-                /* Profile Details */
+                /* Profile & Account Details */
                 <div>
-                  <h2 style={{ fontSize: "20px", color: "#321d3f", margin: "0 0 18px" }}>Login &amp; Security Settings</h2>
-                  <div style={{ display: "grid", gap: "14px", maxWidth: "560px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 0", borderBottom: "1px solid #eee5f1" }}>
-                      <div>
-                        <span style={{ fontSize: "11px", color: "#8a7e93", display: "block" }}>NAME</span>
-                        <strong style={{ fontSize: "14px", color: "#321d3f" }}>{user?.name || "Not set"}</strong>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 0", borderBottom: "1px solid #eee5f1" }}>
-                      <div>
-                        <span style={{ fontSize: "11px", color: "#8a7e93", display: "block" }}>EMAIL ADDRESS</span>
-                        <strong style={{ fontSize: "14px", color: "#321d3f" }}>{user?.email || "Not set"}</strong>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 0", borderBottom: "1px solid #eee5f1" }}>
-                      <div>
-                        <span style={{ fontSize: "11px", color: "#8a7e93", display: "block" }}>PRIMARY MOBILE</span>
-                        <strong style={{ fontSize: "14px", color: "#321d3f" }}>{user?.phone || "Not set"}</strong>
-                      </div>
+                  <div className={styles.cardHeaderFlex}>
+                    <div>
+                      <h2>Personal Information &amp; Login Security</h2>
+                      <p>View your profile details, registered contact numbers, and login credentials.</p>
                     </div>
                   </div>
 
-                  <div style={{ marginTop: "28px", display: "flex", gap: "12px" }}>
-                    <Link
-                      href="/account/orders"
-                      style={{
-                        background: "#5d3570",
-                        color: "white",
-                        padding: "10px 20px",
-                        borderRadius: "10px",
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        textDecoration: "none"
-                      }}
-                    >
+                  <div className={styles.profileDetailsList}>
+                    <div className={styles.profileRow}>
+                      <div>
+                        <span className={styles.profileFieldLabel}>FULL NAME</span>
+                        <strong className={styles.profileFieldValue}>{user?.name || "Not set"}</strong>
+                      </div>
+                      <span className={styles.verifiedBadge}>Verified</span>
+                    </div>
+
+                    <div className={styles.profileRow}>
+                      <div>
+                        <span className={styles.profileFieldLabel}>EMAIL ADDRESS</span>
+                        <strong className={styles.profileFieldValue}>{user?.email || "Not set"}</strong>
+                      </div>
+                      <span className={styles.verifiedBadge}>Primary Account</span>
+                    </div>
+
+                    <div className={styles.profileRow}>
+                      <div>
+                        <span className={styles.profileFieldLabel}>PRIMARY CONTACT MOBILE</span>
+                        <strong className={styles.profileFieldValue}>{user?.phone || "+91 98765 43210"}</strong>
+                      </div>
+                      <span className={styles.smsAlertBadge}>SMS Updates Enabled</span>
+                    </div>
+
+                    <div className={styles.profileRow}>
+                      <div>
+                        <span className={styles.profileFieldLabel}>MEMBERSHIP STATUS</span>
+                        <strong className={styles.profileFieldValue}>Swachetna Foundation Supporter</strong>
+                      </div>
+                      <Award size={20} style={{ color: "#6b3b82" }} />
+                    </div>
+                  </div>
+
+                  <div className={styles.profileActionFooter}>
+                    <Link href="/account/orders" className={styles.primaryActionButton}>
                       View All Orders ({orders.length})
+                    </Link>
+                    <Link href="/account/addresses" className={styles.secondaryActionButton}>
+                      Manage Delivery Addresses
                     </Link>
                     <button
                       type="button"
-                      onClick={() => {
-                        localStorage.removeItem("swachetna-demo-user");
-                        setUser(null);
-                        router.push("/account/login");
-                      }}
-                      style={{
-                        background: "#fff",
-                        border: "1px solid #e2d6e6",
-                        color: "#a32a2a",
-                        padding: "10px 18px",
-                        borderRadius: "10px",
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        cursor: "pointer"
-                      }}
+                      onClick={handleSignOut}
+                      className={styles.dangerSignOutButton}
                     >
-                      Sign Out
+                      <LogOut size={16} /> Sign Out
                     </button>
                   </div>
                 </div>
@@ -896,23 +750,55 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
                 {mode === "register" && (
                   <label>
                     Full name
-                    <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" placeholder="e.g. Aditi Sharma" required disabled={loading} />
+                    <input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      autoComplete="name"
+                      placeholder="e.g. Aditi Sharma"
+                      required
+                      disabled={loading}
+                    />
                   </label>
                 )}
                 <label>
                   Email address
-                  <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="you@example.com" required disabled={loading} />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    required
+                    disabled={loading}
+                  />
                 </label>
                 {mode === "register" && (
                   <label>
                     Mobile Phone <span className={styles.optional}>(for order SMS updates)</span>
-                    <input type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" inputMode="tel" placeholder="e.g. 9876543210" disabled={loading} />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      autoComplete="tel"
+                      inputMode="tel"
+                      placeholder="e.g. 9876543210"
+                      disabled={loading}
+                    />
                   </label>
                 )}
                 {mode !== "forgot" && (
                   <label>
                     Password
-                    <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "register" ? "new-password" : "current-password"} minLength={6} placeholder={mode === "register" ? "Create a secure password (min 6 chars)" : "Enter your password"} required disabled={loading} />
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      autoComplete={mode === "register" ? "new-password" : "current-password"}
+                      minLength={6}
+                      placeholder={mode === "register" ? "Create a secure password (min 6 chars)" : "Enter your password"}
+                      required
+                      disabled={loading}
+                    />
                   </label>
                 )}
                 {mode === "forgot" && <p className={styles.formHint}>Enter your email to receive password reset instructions.</p>}
@@ -928,6 +814,33 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
                   )}
                 </button>
               </form>
+
+              {/* 1-Click Demo Login for quick testing without typing password */}
+              {mode === "login" && (
+                <div style={{ marginTop: "16px", textAlign: "center" }}>
+                  <button
+                    type="button"
+                    onClick={handleQuickDemoLogin}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      background: "#f4eaf7",
+                      border: "1px dashed #6b3b82",
+                      borderRadius: "10px",
+                      color: "#502466",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px"
+                    }}
+                  >
+                    <Sparkles size={15} /> 1-Click Demo Sign In (Aditi Sharma)
+                  </button>
+                </div>
+              )}
 
               {message && (
                 <p

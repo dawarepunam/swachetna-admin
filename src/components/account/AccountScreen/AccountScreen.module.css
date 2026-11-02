@@ -1,19 +1,622 @@
 .page {
   position: relative;
-  min-height: 76vh;
+  min-height: 80vh;
   overflow: hidden;
-  padding: clamp(30px, 5vw, 58px) 24px clamp(58px, 8vw, 96px);
+  padding: clamp(24px, 4vw, 50px) 20px clamp(50px, 6vw, 84px);
   background:
-    radial-gradient(ellipse at 15% 20%, rgba(218, 196, 231, .34), transparent 33%),
-    radial-gradient(ellipse at 92% 80%, rgba(236, 222, 242, .6), transparent 37%),
+    radial-gradient(ellipse at 15% 20%, rgba(218, 196, 231, .3), transparent 35%),
+    radial-gradient(ellipse at 92% 80%, rgba(236, 222, 242, .5), transparent 40%),
     #faf8fb;
 }
 
-.shell { position: relative; z-index: 1; width: min(1080px, 100%); margin-inline: auto; }
-.breadcrumb { display: flex; align-items: center; gap: 10px; margin-bottom: 21px; color: #958a99; font-size: 11px; }
-.breadcrumb a { color: #6e5579; transition: color .2s ease; }
-.breadcrumb a:hover { color: #392147; }
+.shell {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, 100%);
+  margin-inline: auto;
+}
 
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  color: #958a99;
+  font-size: 12px;
+}
+.breadcrumb a {
+  color: #6e5579;
+  text-decoration: none;
+  transition: color .2s ease;
+}
+.breadcrumb a:hover {
+  color: #392147;
+}
+
+/* ================= AUTHENTICATED NYKAA / AMAZON DASHBOARD STYLES ================= */
+.accountHubWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.accountHeroCard {
+  background: linear-gradient(135deg, #371d47 0%, #4d2463 60%, #5d3570 100%);
+  color: #ffffff;
+  border-radius: 20px;
+  padding: clamp(20px, 3.5vw, 32px);
+  display: flex;
+  flex-wrap: wrap;
+  justifyContent: space-between;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 14px 34px rgba(55, 29, 71, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.accountUserInfo {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.userAvatarCircle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.welcomeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e5cdfa;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 3px 10px;
+  border-radius: 99px;
+  margin-bottom: 6px;
+}
+
+.userNameHeading {
+  font-size: clamp(20px, 3vw, 26px);
+  margin: 0;
+  font-weight: 650;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.userSubDetails {
+  margin: 4px 0 0;
+  color: #dec7ea;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.accountStatsRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.statBadge {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 10px 18px;
+  border-radius: 14px;
+  color: #ffffff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+.statBadge:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+.statBadge strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.2;
+}
+.statBadge span {
+  font-size: 11px;
+  color: #e2ceee;
+}
+
+.signOutBtn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 205, 210, 0.3);
+  color: #ffcdd2;
+  padding: 11px 18px;
+  border-radius: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 650;
+  transition: all 0.2s ease;
+}
+.signOutBtn:hover {
+  background: rgba(211, 47, 47, 0.2);
+  color: #ffffff;
+  border-color: #ef9a9a;
+}
+
+/* Amazon 4 Quick Hub Tiles */
+.hubGridShortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+}
+
+.shortcutTile {
+  background: #ffffff;
+  border: 1.5px solid #ece4f0;
+  border-radius: 18px;
+  padding: 18px 20px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(50, 20, 60, 0.04);
+  transition: all 0.22s ease;
+}
+.shortcutTile:hover {
+  transform: translateY(-3px);
+  border-color: #6b3b82;
+  box-shadow: 0 8px 22px rgba(107, 59, 130, 0.12);
+}
+.shortcutActive {
+  border-color: #6b3b82;
+  background: #fbf8fd;
+  box-shadow: 0 4px 18px rgba(107, 59, 130, 0.1);
+}
+
+.shortcutIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.iconPurple { background: #f4ebf8; color: #6b3b82; }
+.iconBlue { background: #e8f0fe; color: #1967d2; }
+.iconOrange { background: #fef3e2; color: #b06000; }
+.iconGreen { background: #eef8f2; color: #1a8f4c; }
+
+.shortcutText strong {
+  display: block;
+  font-size: 15px;
+  color: #2e1c3a;
+  margin-bottom: 2px;
+}
+.shortcutText span {
+  font-size: 12px;
+  color: #7a6e83;
+}
+
+/* Main Workspace Card */
+.accountContentCard {
+  background: #ffffff;
+  border-radius: 22px;
+  border: 1px solid #ede5f2;
+  padding: clamp(22px, 3.5vw, 36px);
+  box-shadow: 0 10px 30px rgba(47, 27, 59, 0.04);
+}
+
+.cardHeaderFlex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f1e9f4;
+}
+.cardHeaderFlex h2 {
+  font-size: clamp(20px, 2.5vw, 24px);
+  color: #321d3f;
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+.cardHeaderFlex p {
+  color: #7a6e83;
+  font-size: 13.5px;
+  margin: 0;
+}
+
+.shopMoreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f4ebf8;
+  color: #6b3b82;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.shopMoreBtn:hover {
+  background: #6b3b82;
+  color: #fff;
+}
+
+/* Orders Styling */
+.orderListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.orderCardItem {
+  border: 1px solid #ebe2ef;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+  transition: border-color 0.2s;
+}
+.orderCardItem:hover {
+  border-color: #ba9bc8;
+}
+
+.orderCardHead {
+  background: #faf7fc;
+  padding: 14px 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 14px;
+  align-items: center;
+  border-bottom: 1px solid #eee5f2;
+  font-size: 12.5px;
+}
+.orderLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 750;
+  color: #8b7d94;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+.orderCardHead strong {
+  color: #321d3f;
+  font-size: 13.5px;
+}
+
+.orderIdBlock {
+  text-align: right;
+}
+.statusPill {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  margin-top: 4px;
+}
+
+.orderCardBody {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.orderItemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 250px;
+}
+
+.orderProductRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.orderProductThumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #ede5f0;
+}
+.orderProductThumbPlaceholder {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: #f4ebf8;
+  color: #6b3b82;
+  display: grid;
+  place-items: center;
+}
+.orderProductName {
+  font-size: 14px;
+  color: #2e1c3a;
+  display: block;
+}
+.orderProductQty {
+  font-size: 12px;
+  color: #7a6e83;
+  margin-top: 2px;
+}
+
+.orderActionsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 170px;
+}
+
+.trackPackageBtn {
+  background: #5d3570;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+.trackPackageBtn:hover {
+  background: #472657;
+}
+
+.viewReceiptBtn {
+  border: 1px solid #d4c5da;
+  color: #5d3570;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.2s;
+}
+.viewReceiptBtn:hover {
+  background: #faf6fc;
+  border-color: #5d3570;
+}
+
+/* Addresses Section */
+.addressGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 22px;
+}
+
+.addressCardActive {
+  border: 2px solid #5d3570;
+  border-radius: 16px;
+  padding: 22px;
+  position: relative;
+  background: #fff;
+}
+.defaultAddressBadge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 10.5px;
+  font-weight: 750;
+  color: #1a8f4c;
+  background: #eef8f2;
+  padding: 3px 10px;
+  border-radius: 99px;
+  letter-spacing: 0.04em;
+}
+.addressName {
+  font-size: 16px;
+  color: #321d3f;
+  display: block;
+}
+.addressLines {
+  color: #5d5165;
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+.addressPhone {
+  color: #8b7d94;
+  font-size: 12.5px;
+}
+
+.addressEmptyCard {
+  border: 1.5px dashed #cdbed4;
+  border-radius: 16px;
+  padding: 28px 20px;
+  text-align: center;
+}
+.addressEmptyCard strong {
+  display: block;
+  font-size: 15px;
+  color: #321d3f;
+  margin-bottom: 4px;
+}
+.addressEmptyCard p {
+  font-size: 13px;
+  color: #7a6e83;
+  margin: 0;
+}
+
+.addressFormCard {
+  background: #faf7fc;
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid #ebddee;
+}
+.formCardTitle {
+  font-size: 15px;
+  color: #321d3f;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.addressForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.addressForm input {
+  padding: 10px 14px;
+  border-radius: 9px;
+  border: 1px solid #dcd1e1;
+  font-size: 13.5px;
+  background: #fff;
+  outline: none;
+}
+.addressForm input:focus {
+  border-color: #6b3b82;
+  box-shadow: 0 0 0 2px rgba(107, 59, 130, 0.12);
+}
+.addressInputRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.saveAddressBtn {
+  background: #5d3570;
+  color: white;
+  border: none;
+  padding: 11px 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.saveAddressBtn:hover {
+  background: #472657;
+}
+.addressSuccessNote {
+  font-size: 12.5px;
+  color: #166534;
+  margin-top: 10px;
+}
+
+/* Profile Details List */
+.profileDetailsList {
+  display: grid;
+  gap: 16px;
+  max-width: 680px;
+}
+.profileRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee5f2;
+}
+.profileFieldLabel {
+  font-size: 11px;
+  color: #8b7d94;
+  font-weight: 700;
+  display: block;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.profileFieldValue {
+  font-size: 15px;
+  color: #2e1c3a;
+}
+.verifiedBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a8f4c;
+  background: #eef8f2;
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+.smsAlertBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1967d2;
+  background: #e8f0fe;
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+
+.profileActionFooter {
+  margin-top: 30px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.primaryActionButton {
+  background: #5d3570;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.primaryActionButton:hover {
+  background: #472657;
+}
+.secondaryActionButton {
+  border: 1px solid #d4c5da;
+  background: #fff;
+  color: #5d3570;
+  padding: 12px 22px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.secondaryActionButton:hover {
+  background: #fbf8fd;
+  border-color: #5d3570;
+}
+.dangerSignOutButton {
+  background: #fff;
+  border: 1px solid #ffd0d0;
+  color: #b91c1c;
+  padding: 12px 22px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  font-weight: 650;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.dangerSignOutButton:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+/* ================= AUTHENTICATION LOGIN/REGISTER FORMS ================= */
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1fr);
@@ -38,20 +641,46 @@
   color: #fff;
 }
 
-.brandMark, .panelIcon { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(246, 233, 252, .28); border-radius: 16px; background: rgba(255, 255, 255, .1); color: #f3e5fb; }
+.brandMark, .panelIcon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(246, 233, 252, .28);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .1);
+  color: #f3e5fb;
+}
 .brandMark svg { width: 21px; height: 21px; stroke-width: 1.65; }
 .eyebrow, .panelEyebrow { display: block; font-size: 9px; font-weight: 750; letter-spacing: .18em; }
 .eyebrow { margin-top: 34px; color: #d7b8e5; }
-.grid h1 { max-width: 410px; margin-top: 13px; color: #fff; font-family: var(--font-heading); font-size: clamp(40px, 4.7vw, 58px); font-weight: 500; letter-spacing: -.045em; line-height: .98; }
-.intro { position: relative; z-index: 1; max-width: 335px; margin-top: 15px; color: rgba(246, 239, 249, .76); font-size: 12px; line-height: 1.75; }
+.grid h1 { max-width: 410px; margin-top: 13px; color: #fff; font-family: var(--font-heading); font-size: clamp(36px, 4.5vw, 54px); font-weight: 500; letter-spacing: -.045em; line-height: .98; }
+.intro { position: relative; z-index: 1; max-width: 335px; margin-top: 15px; color: rgba(246, 239, 249, .76); font-size: 13px; line-height: 1.75; }
 
-.decorativeOrb { position: absolute; right: -85px; bottom: 105px; width: 230px; height: 230px; border: 1px solid rgba(255, 255, 255, .08); border-radius: 50%; box-shadow: 0 0 0 25px rgba(255, 255, 255, .025), 0 0 0 58px rgba(255, 255, 255, .018); pointer-events: none; }
+.decorativeOrb {
+  position: absolute;
+  right: -85px;
+  bottom: 105px;
+  width: 230px;
+  height: 230px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 50%;
+  box-shadow: 0 0 0 25px rgba(255, 255, 255, .025), 0 0 0 58px rgba(255, 255, 255, .018);
+  pointer-events: none;
+}
 
-.panel { display: flex; flex-direction: column; justify-content: center; padding: clamp(30px, 5vw, 62px); background: rgba(255, 255, 255, .96); }
-.panelHeading { display: flex; align-items: center; gap: 14px; margin-bottom: 29px; }
+.panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(30px, 5vw, 62px);
+  background: rgba(255, 255, 255, .96);
+}
+.panelHeading { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
 .panelIcon { width: 46px; height: 46px; border-color: #eadff0; border-radius: 15px; background: #f6f0f8; color: #704b80; }
 .panelIcon svg { width: 19px; height: 19px; stroke-width: 1.7; }
-.panelEyebrow { margin-bottom: 5px; color: #9a829f; font-size: 8px; }
+.panelEyebrow { margin-bottom: 5px; color: #9a829f; font-size: 9px; }
 .panel h2 { color: #362840; font-family: var(--font-heading); font-size: 28px; font-weight: 600; letter-spacing: -.025em; line-height: 1.15; }
 
 .form { display: grid; gap: 17px; }
@@ -70,33 +699,32 @@
 .links a { color: #7451ba; font-weight: 650; text-decoration: none; }
 .links a:hover { color: #52358c; text-decoration: underline; text-underline-offset: 3px; }
 
-.detail { margin-top: -7px; }
-.detail p { display: flex; gap: 12px; padding: 15px 0; border-bottom: 1px solid #f0ebf2; color: #3c3144; font-size: 13.5px; overflow-wrap: anywhere; }
-.detail p span { width: 90px; flex: 0 0 auto; color: #84768a; font-weight: 600; }
-.secondaryButton { margin-top: 22px; padding: 12px 18px; border: 1px solid #dacde0; border-radius: 10px; background: #fff; color: #5b4169; font-size: 12.5px; font-weight: 650; cursor: pointer; transition: background .2s ease, border-color .2s ease; }
-.secondaryButton:hover { border-color: #bfa6cb; background: #faf7fb; color: #7451ba; }
-.cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; color: #7451ba; font-size: 13px; font-weight: 650; }
-.order { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 16px 0; border-bottom: 1px solid #eee8f0; }
-.order span { color: #43364b; font-size: 13px; font-weight: 600; }
-.order strong { color: #7451ba; font-size: 14px; }
-.order small { grid-column: 1 / -1; color: #857a8a; font-size: 11.5px; }
-
+/* Responsive Adjustments across iOS, Android, Mac, Windows */
 @media (max-width: 860px) {
-  .page { min-height: auto; padding: 22px 14px 48px; }
+  .page { min-height: auto; padding: 18px 12px 48px; }
   .grid { width: 100%; grid-template-columns: 1fr; min-height: auto; margin-inline: auto; border-radius: 20px; }
   .introPanel { display: none; }
-  .panel { padding: 26px 20px 24px; }
+  .panel { padding: 26px 18px 24px; }
   .panelHeading { margin-bottom: 20px; }
+  .accountHeroCard { flex-direction: column; align-items: flex-start; }
+  .accountStatsRow { width: 100%; justify-content: space-between; }
+  .orderCardHead { grid-template-columns: 1fr 1fr; }
+  .orderIdBlock { text-align: left; }
+  .orderCardBody { flex-direction: column; align-items: flex-start; }
+  .orderActionsCol { width: 100%; }
 }
 
-@media (max-width: 420px) {
-  .page { padding-inline: 10px; }
+@media (max-width: 480px) {
+  .page { padding-inline: 8px; }
   .panel { padding: 20px 14px 18px; }
   .panel h2 { font-size: 22px; }
   .links { align-items: flex-start; flex-direction: column; gap: 8px; }
-  .order { grid-template-columns: 1fr; gap: 4px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .breadcrumb a, .form input, .submitButton, .secondaryButton { transition: none; }
+  .hubGridShortcuts { grid-template-columns: 1fr; }
+  .accountUserInfo { gap: 12px; }
+  .userAvatarCircle { width: 50px; height: 50px; font-size: 20px; }
+  .accountStatsRow { gap: 8px; }
+  .statBadge { padding: 8px 12px; flex: 1; }
+  .statBadge strong { font-size: 14px; }
+  .profileActionFooter { flex-direction: column; }
+  .primaryActionButton, .secondaryActionButton, .dangerSignOutButton { width: 100%; text-align: center; justify-content: center; }
 }
