@@ -92,6 +92,7 @@ type AdminDataValue = WorkspaceState & {
   setCoupons: Dispatch<SetStateAction<AdminCoupon[]>>;
   setOrderStatus: (id: string, status: AdminOrder["status"]) => Promise<boolean>;
   setInquiryStatus: (id: string, status: AdminInquiry["status"], reply?: string) => Promise<boolean>;
+  deleteOrder: (id: string) => Promise<boolean>;
   syncToStrapi: (customProducts?: AdminProduct[]) => Promise<boolean>;
   syncWorkspace: (overrides?: Partial<WorkspaceState & { orders: AdminOrder[] }>) => Promise<boolean>;
 };
@@ -449,6 +450,28 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     return syncWorkspace({ orderStatuses: updatedStatuses });
   };
 
+  const deleteOrder = async (id: string): Promise<boolean> => {
+    const updatedOrders = orders.filter((o) => o.id !== id);
+    setOrders(updatedOrders);
+
+    // Update local storage demo orders
+    try {
+      const rawOrders = window.localStorage.getItem(ORDER_STORAGE_KEY);
+      const parsed = rawOrders ? JSON.parse(rawOrders) : [];
+      if (Array.isArray(parsed)) {
+        const remaining = parsed.filter((o: any) => o.reference !== id && o.id !== id);
+        window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(remaining));
+      }
+      // Also track deleted order ids so sample orders don't reappear if user deletes sample order
+      const deletedRaw = window.localStorage.getItem("swachetna-deleted-order-ids");
+      const deletedIds = deletedRaw ? JSON.parse(deletedRaw) : [];
+      window.localStorage.setItem("swachetna-deleted-order-ids", JSON.stringify([...new Set([...deletedIds, id])]));
+    } catch { /* ignore */ }
+
+    // Sync to Strapi workspace
+    return syncWorkspace({ orders: updatedOrders });
+  };
+
   const setInquiryStatus = async (id: string, status: AdminInquiry["status"], reply?: string): Promise<boolean> => {
     const updatedInqs = inquiries.map((inq) => {
       if (inq.id === id) {
@@ -476,7 +499,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AdminDataValue>(() => ({
     products, categories, campaigns, content, settings, orderStatuses, inquiries, coupons, orders: orders.map((order) => ({ ...order, status: orderStatuses[order.id] ?? order.status })), ready,
-    setProducts: setProductsWithEdit, setCategories: setCategoriesWithEdit, setCampaigns, setContent, setSettings, setInquiries, setCoupons, setOrderStatus, setInquiryStatus, syncToStrapi, syncWorkspace,
+    setProducts: setProductsWithEdit, setCategories: setCategoriesWithEdit, setCampaigns, setContent, setSettings, setInquiries, setCoupons, setOrderStatus, setInquiryStatus, deleteOrder, syncToStrapi, syncWorkspace,
   }), [products, categories, campaigns, content, settings, orderStatuses, inquiries, coupons, orders, ready]);
 
   return <AdminDataContext.Provider value={value}>{children}</AdminDataContext.Provider>;

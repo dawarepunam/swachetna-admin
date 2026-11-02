@@ -148,7 +148,18 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
     });
     return filtered.sort((a, b) => sort === "price-low" ? a.price - b.price : sort === "price-high" ? b.price - a.price : sort === "stock-low" ? a.stock - b.stock : a.name.localeCompare(b.name));
   }, [data.products, search, statusFilter, categoryFilter, stockFilter, sort]);
-  const orderRecords = useMemo(() => data.orders.length ? data.orders : samplePreviewOrders.map((order) => ({ ...order, status: data.orderStatuses[order.id] ?? order.status })), [data.orders, data.orderStatuses]);
+  const [deletedOrderIds, setDeletedOrderIds] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("swachetna-deleted-order-ids");
+      if (stored) setDeletedOrderIds(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, []);
+
+  const orderRecords = useMemo(() => {
+    const raw = data.orders.length ? data.orders : samplePreviewOrders.map((order) => ({ ...order, status: data.orderStatuses[order.id] ?? order.status }));
+    return raw.filter((order) => !deletedOrderIds.includes(order.id));
+  }, [data.orders, data.orderStatuses, deletedOrderIds]);
   const visibleOrders = useMemo(() => orderRecords.filter((order) => `${order.id} ${order.customer}`.toLowerCase().includes(search.toLowerCase()) && (statusFilter === "All statuses" || order.status === statusFilter)), [orderRecords, search, statusFilter]);
 
   const [savingProduct, setSavingProduct] = useState(false);
@@ -193,6 +204,13 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
     data.setProducts(updated);
     await data.syncWorkspace({ products: updated });
     notify("Stock updated and saved to database.");
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm(`Are you sure you want to delete order ${orderId}? This cannot be undone.`)) return;
+    setDeletedOrderIds((prev) => [...prev, orderId]);
+    const ok = await data.deleteOrder(orderId);
+    notify(ok ? `Order ${orderId} deleted successfully.` : `Order ${orderId} removed from workspace.`);
   };
 
   const handleDeleteProduct = async (product: AdminProduct) => {
@@ -330,7 +348,7 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
         onAdjust={updateStock}
       />
     )}
-    {section === "orders" && <>{data.ready && data.orders.length === 0 && <div className={styles.demoBanner}><span><Sparkles size={14} /> SAMPLE ORDERS</span><p>These example orders are for preview only. They are not real purchases and are not saved as store orders.</p></div>}<OrdersSection orders={visibleOrders} isPreview={!data.orders.length} search={search} onSearch={setSearch} status={statusFilter} onStatusFilter={setStatusFilter} onStatus={(id, status) => data.setOrderStatus(id, status)} onExport={() => exportOrders(orderRecords)} onSelectOrder={(order) => setSelectedOrder(order)} /></>}
+    {section === "orders" && <>{data.ready && data.orders.length === 0 && <div className={styles.demoBanner}><span><Sparkles size={14} /> SAMPLE ORDERS</span><p>These example orders are for preview only. They are not real purchases and are not saved as store orders.</p></div>}<OrdersSection orders={visibleOrders} isPreview={!data.orders.length} search={search} onSearch={setSearch} status={statusFilter} onStatusFilter={setStatusFilter} onStatus={(id, status) => data.setOrderStatus(id, status)} onDeleteOrder={handleDeleteOrder} onExport={() => exportOrders(orderRecords)} onSelectOrder={(order) => setSelectedOrder(order)} /></>}
     {section === "coupons" && <CouponsSection coupons={data.coupons} onSave={(updated) => data.syncWorkspace({ coupons: updated })} />}
     {section === "reviews" && <ReviewsSection products={data.products} onSaveProducts={(updated) => data.syncWorkspace({ products: updated })} />}
     {section === "inquiries" && <InquiriesSection inquiries={data.inquiries} onStatus={(id, status, reply) => data.setInquiryStatus(id, status, reply)} />}
@@ -1176,6 +1194,7 @@ function OrdersSection({
   status,
   onStatusFilter,
   onStatus,
+  onDeleteOrder,
   onExport,
   onSelectOrder,
 }: {
@@ -1186,6 +1205,7 @@ function OrdersSection({
   status: string;
   onStatusFilter: (value: string) => void;
   onStatus: (id: string, status: AdminOrder["status"]) => void;
+  onDeleteOrder?: (id: string) => void;
   onExport: () => void;
   onSelectOrder: (order: AdminOrder) => void;
 }) {
@@ -1384,18 +1404,34 @@ function OrdersSection({
                       <strong style={{ fontSize: "14px", color: "#166534" }}>{formatCurrency(order.total)}</strong>
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className={styles.secondaryButton}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectOrder(order);
-                        }}
-                        title="View order invoice & details"
-                        style={{ fontSize: "11.5px", padding: "5px 10px", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                      >
-                        <Eye size={13} /> Invoice
-                      </button>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                        <button
+                          type="button"
+                          className={styles.secondaryButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectOrder(order);
+                          }}
+                          title="View order invoice & details"
+                          style={{ fontSize: "11.5px", padding: "5px 9px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        >
+                          <Eye size={13} /> Invoice
+                        </button>
+                        {onDeleteOrder && (
+                          <button
+                            type="button"
+                            className={styles.iconButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteOrder(order.id);
+                            }}
+                            title="Delete this order"
+                            style={{ color: "#dc2626", background: "#fef2f2", border: "1px solid #fee2e2", padding: "5px 7px" }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -3265,21 +3301,31 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
     }
   ], []);
 
+  const [deletedReviewIds, setDeletedReviewIds] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("swachetna-deleted-review-ids");
+      if (stored) setDeletedReviewIds(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, []);
+
   const allReviewsWithProduct = useMemo(() => {
     const list: Array<{ productSlug: string; productName: string; productImage?: string; review: any }> = [];
     products.forEach((p) => {
       if (Array.isArray(p.reviews) && p.reviews.length > 0) {
         p.reviews.forEach((r) => {
-          list.push({ productSlug: p.slug, productName: p.name, productImage: p.image, review: r });
+          if (!deletedReviewIds.includes(r.id)) {
+            list.push({ productSlug: p.slug, productName: p.name, productImage: p.image, review: r });
+          }
         });
       }
     });
 
     if (list.length === 0) {
-      return defaultSampleReviews;
+      return defaultSampleReviews.filter((sr) => !deletedReviewIds.includes(sr.review.id));
     }
-    return list;
-  }, [products, defaultSampleReviews]);
+    return list.filter((item) => !deletedReviewIds.includes(item.review.id));
+  }, [products, defaultSampleReviews, deletedReviewIds]);
 
   const [filterRating, setFilterRating] = useState("all");
   const [selectedProductReviewModal, setSelectedProductReviewModal] = useState<{
@@ -3291,6 +3337,14 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
   } | null>(null);
 
   const handleDeleteReview = async (productSlug: string, reviewId: string) => {
+    if (!window.confirm("Are you sure you want to delete this customer review?")) return;
+    setDeletedReviewIds((prev) => {
+      const next = [...prev, reviewId];
+      try {
+        window.localStorage.setItem("swachetna-deleted-review-ids", JSON.stringify(next));
+      } catch { /* ignore */ }
+      return next;
+    });
     const updated = products.map((p) => {
       if (p.slug === productSlug && Array.isArray(p.reviews)) {
         return {
