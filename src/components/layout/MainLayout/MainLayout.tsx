@@ -8,16 +8,14 @@ interface MainLayoutProps {
   children: ReactNode;
 }
 
-export default function MainLayout({
-  children,
-}: MainLayoutProps) {
+export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className={styles.layout}>
-      <AnnouncementBar />
-      <Header />
-
+      <div className={styles.stickyHeaderGroup}>
+        <AnnouncementBar />
+        <Header />
+      </div>
       <div className={styles.main}>{children}</div>
-
       <Footer />
     </div>
   );

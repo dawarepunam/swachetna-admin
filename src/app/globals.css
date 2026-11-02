@@ -22,7 +22,7 @@ body {
   padding: 0;
   min-height: 100%;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
 }
 
@@ -248,3 +248,4 @@ select:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
