@@ -22,7 +22,18 @@ export default function CheckoutPage() {
   const [savedUser, setSavedUser] = useState<any>(null);
   const [hasSavedAddress, setHasSavedAddress] = useState(false);
   const [formError, setFormError] = useState("");
-  const shipping = subtotal >= 1500 || subtotal === 0 ? 0 : 99;
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; description?: string } | null>(null);
+
+  useEffect(() => {
+    try {
+      const savedCpn = sessionStorage.getItem("swachetna-applied-coupon");
+      if (savedCpn) setAppliedCoupon(JSON.parse(savedCpn));
+    } catch { /* ignore */ }
+  }, []);
+
+  const discountAmount = appliedCoupon ? Math.min(subtotal, appliedCoupon.discount) : 0;
+  const shipping = (subtotal - discountAmount) >= 1500 || subtotal === 0 ? 0 : 99;
+  const grandTotal = Math.max(0, subtotal - discountAmount + shipping);
 
   // Auto-fill details if user is logged in or has saved address
   useEffect(() => {
@@ -193,9 +204,15 @@ export default function CheckoutPage() {
             <span className={styles.step}>02 · ORDER SUMMARY</span>
             <div><span>Items</span><strong>{cart.reduce((sum, line) => sum + line.quantity, 0)}</strong></div>
             <div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
+            {appliedCoupon && (
+              <div style={{ color: "#166534" }}>
+                <span>Coupon ({appliedCoupon.code})</span>
+                <strong>−{formatCurrency(discountAmount)}</strong>
+              </div>
+            )}
             <div><span>Shipping</span><strong>{shipping ? formatCurrency(shipping) : "Free"}</strong></div>
             <small>Free shipping on orders over {formatCurrency(1500)}.</small>
-            <div className={styles.total}><span>Total</span><strong>{formatCurrency(subtotal + shipping)}</strong></div>
+            <div className={styles.total}><span>Total</span><strong>{formatCurrency(grandTotal)}</strong></div>
             <small><ShieldCheck size={14} /> 100% Safe &amp; Encrypted Checkout.</small>
           </aside>
         </div>

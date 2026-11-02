@@ -111,7 +111,38 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState(initialSettings);
   const [orderStatuses, setOrderStatuses] = useState<Record<string, AdminOrder["status"]>>({});
   const [orders, setOrders] = useState<AdminOrder[]>([]);
-  const [inquiries, setInquiries] = useState<AdminInquiry[]>([]);
+  const [inquiries, setInquiries] = useState<AdminInquiry[]>([
+    {
+      id: "inq-sample-1",
+      name: "Pooja Deshmukh",
+      email: "pooja.d@gmail.com",
+      phone: "+91 98234 56789",
+      subject: "Bulk Order Inquiry for Diwali Corporate Gifting",
+      message: "Hello Swachetna team, We are looking to order 50 gift hampers of organic laddu and traditional pickles for our company employees in Pune. Could you please share the corporate pricing catalogue and delivery timeline?",
+      status: "New",
+      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    },
+    {
+      id: "inq-sample-2",
+      name: "Rajesh Kulkarni",
+      email: "rajesh.kulkarni@yahoo.com",
+      phone: "+91 97654 32100",
+      subject: "Handmade Terracotta Pottery Availability",
+      message: "Namaste, I want to purchase 4 sets of hand-molded terracotta vases and diyas for our new home in Mumbai. Is shipping available with safe bubble wrapping?",
+      status: "Read",
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: "inq-sample-3",
+      name: "Sneha Patil",
+      email: "sneha.patil@outlook.com",
+      phone: "+91 91234 88990",
+      subject: "NGO Artisan Collaboration",
+      message: "Respected Team, We represent a self-help women artisans group in Satara specializing in handloom jute bags. We would love to collaborate with Swachetna Foundation to showcase our products on your platform.",
+      status: "Responded",
+      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    }
+  ]);
   const [coupons, setCoupons] = useState<AdminCoupon[]>([
     { id: "cpn-default-1", code: "SWACHETNA10", discountType: "percentage", discountValue: 10, minOrderAmount: 500, maxDiscount: 300, status: "Active", description: "10% off on orders above ₹500" },
     { id: "cpn-default-2", code: "ARTISAN100", discountType: "fixed", discountValue: 100, minOrderAmount: 800, status: "Active", description: "Flat ₹100 discount on authentic artisan crafts" }

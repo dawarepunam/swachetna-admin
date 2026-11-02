@@ -35,6 +35,28 @@ export default function ContactPage() {
         message: message.trim(),
       });
 
+      // Also save to localStorage inquiries so Admin Panel sees it instantly even without Strapi
+      try {
+        const STORAGE_KEY = "swachetna-admin-workspace-v1";
+        const currentStored = localStorage.getItem(STORAGE_KEY);
+        const parsed = currentStored ? JSON.parse(currentStored) : {};
+        const existingInqs = Array.isArray(parsed.inquiries) ? parsed.inquiries : [];
+        const newInqObj = {
+          id: `inq-${Date.now()}`,
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim() || "",
+          subject: subject.trim() || "General Inquiry",
+          message: message.trim(),
+          status: "New",
+          createdAt: new Date().toISOString(),
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          ...parsed,
+          inquiries: [newInqObj, ...existingInqs],
+        }));
+      } catch { /* ignore */ }
+
       if (success) {
         setFeedback("Thank you! Your message has been sent to Swachetna Foundation. We'll get back to you within 1-2 business days.");
       } else {
