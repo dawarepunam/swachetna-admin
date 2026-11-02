@@ -2671,15 +2671,6 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
     </>
   );
 }
-          </table>
-          {filtered.length === 0 && (
-            <EmptyState title="No reviews found" body="Customer reviews submitted on product pages will appear here for management." />
-          )}
-        </div>
-      </section>
-    </>
-  );
-}
 
 function EmptyState({ title, body }: { title: string; body: string }) { return <div className={styles.emptyTable}><span><Search size={19} /></span><strong>{title}</strong><p>{body}</p></div>; }
 function formatDate(value: string) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "Date unavailable" : new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(date); }
