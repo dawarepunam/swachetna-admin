@@ -36,7 +36,8 @@ export default function ProductDetail({ product }: { product: Product }) {
   const addedTimer = useRef<number | null>(null);
 
   // Nykaa Shade Variants support: product.variants can have { name, hex, images: [] }
-  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
+  const parsedVariants = useMemo(() => { if (!product.variants) return []; if (Array.isArray(product.variants)) return product.variants; if (typeof product.variants === 'string') { try { return JSON.parse(product.variants); } catch { return []; } } return []; }, [product.variants]);
+  const hasVariants = parsedVariants.length > 0;
   
   // Compute context-appropriate variant labels based on product category & subcategory
   const variantLabels = useMemo(() => {

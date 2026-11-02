@@ -103,7 +103,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
             images: typeof p.images === "string" ? p.images.split(",").map((img: string) => img.trim()).filter(Boolean) : (Array.isArray(p.images) ? p.images : (p.image ? [p.image] : [])),
             colors: typeof p.colors === "string" ? p.colors.split(",").map((c: string) => c.trim()).filter(Boolean) : (Array.isArray(p.colors) ? p.colors : []),
             sizes: typeof p.sizes === "string" ? p.sizes.split(",").map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(p.sizes) ? p.sizes : []),
-            variants: Array.isArray(p.variants) ? p.variants : [],
+            variants: Array.isArray(p.variants) ? p.variants : (typeof p.variants === 'string' ? (() => { try { return JSON.parse(p.variants); } catch { return []; } })() : []),
             reviews: Array.isArray(p.reviews) ? p.reviews : [],
           }));
 
@@ -128,6 +128,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
               stock: apiMatch.stock !== undefined ? apiMatch.stock : fb.stock,
               image: apiMatch.image || fb.image,
               images: (apiMatch.images && apiMatch.images.length > 0) ? apiMatch.images : fb.images,
+              variants: (apiMatch.variants && apiMatch.variants.length > 0) ? apiMatch.variants : fb.variants,
             };
           });
 

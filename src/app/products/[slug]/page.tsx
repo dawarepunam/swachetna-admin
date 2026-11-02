@@ -33,7 +33,7 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
           images: Array.isArray(match.images) ? match.images : (typeof match.images === "string" ? match.images.split(",").map((i: string) => i.trim()).filter(Boolean) : undefined),
           colors: typeof match.colors === "string" ? match.colors.split(",").map((c: string) => c.trim()).filter(Boolean) : (Array.isArray(match.colors) ? match.colors : []),
           sizes: typeof match.sizes === "string" ? match.sizes.split(",").map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(match.sizes) ? match.sizes : []),
-          variants: Array.isArray(match.variants) ? match.variants : [],
+          variants: Array.isArray(match.variants) ? match.variants : (typeof match.variants === 'string' ? (() => { try { return JSON.parse(match.variants); } catch { return []; } })() : []),
           reviews: Array.isArray(match.reviews) ? match.reviews : [],
         };
       }

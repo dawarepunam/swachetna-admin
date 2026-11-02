@@ -702,7 +702,7 @@
   }
 
   .mobileHidden {
-    display: none;
+    display: none !important;
   }
 
   .actions {
@@ -787,6 +787,12 @@
 /* =========================
    LIVE SEARCH BAR & DROPDOWN
 ========================= */
+@media (max-width: 900px) {
+  .searchContainer {
+    display: none !important;
+  }
+}
+
 .searchContainer {
   position: relative;
   display: flex;
