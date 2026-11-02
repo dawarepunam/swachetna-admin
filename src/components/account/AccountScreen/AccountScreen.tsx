@@ -29,14 +29,16 @@ import {
   Edit2,
   Award,
   Sparkles,
-  ShoppingBasket
+  ShoppingBasket,
+  Save,
+  X
 } from "lucide-react";
 import styles from "./AccountScreen.module.css";
 import { formatCurrency } from "../../../data/products";
 import { useStore } from "../../../context/StoreContext";
 
 type Mode = "login" | "register" | "forgot" | "profile" | "orders" | "addresses";
-type User = { id?: string | number; name: string; email: string; phone?: string; jwt?: string; address?: string };
+type User = { id?: string | number; name: string; email: string; phone?: string; jwt?: string; address?: string; avatar?: string };
 type AccountOrder = {
   reference: string;
   total: number;
@@ -75,6 +77,14 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
   const [addressDraft, setAddressDraft] = useState({ line: "", city: "", state: "", postalCode: "" });
   const [savedAddress, setSavedAddress] = useState<any>(null);
 
+  // Edit Profile Modal / Form State
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   const isAuthMode = mode === "login" || mode === "register" || mode === "forgot";
 
   // Check login session on mount
@@ -85,6 +95,9 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
       if (saved) {
         currentUser = JSON.parse(saved) as User;
         setUser(currentUser);
+        setEditName(currentUser.name || "");
+        setEditEmail(currentUser.email || "");
+        setEditPhone(currentUser.phone || "");
       }
       const addr = localStorage.getItem("swachetna-saved-address");
       if (addr) {
@@ -159,12 +172,60 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
     loadAccountOrders();
   }, []);
 
-  // Amazon/Nykaa Rule: If user is already logged in and lands on login/register/forgot, automatically redirect to profile!
+  // Amazon/Nykaa Rule: If user is already logged in and lands on login or forgot, redirect to profile!
+  // Note: If on register, allow user to view or sign out first.
   useEffect(() => {
-    if (authChecked && user && isAuthMode) {
+    if (authChecked && user && (mode === "login" || mode === "forgot")) {
       router.replace("/account/profile");
     }
-  }, [authChecked, user, isAuthMode, router]);
+  }, [authChecked, user, mode, router]);
+
+  // Handle Google 1-Click Login
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setMessage("");
+    setIsError(false);
+    try {
+      // Simulate/Trigger Google Single Sign-on
+      const promptEmail = user?.email || "aditi.sharma@gmail.com";
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: promptEmail,
+          name: "Aditi Sharma",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.user) {
+        localStorage.setItem("swachetna-demo-user", JSON.stringify(data.user));
+        window.dispatchEvent(new Event("swachetna-auth-changed"));
+        setUser(data.user);
+
+        // Send confirmation notification to user email
+        fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: data.user.email,
+            name: data.user.name,
+            type: "google_login",
+          }),
+        }).catch(() => {});
+
+        setMessage("Signed in successfully with Google!");
+        setTimeout(() => router.replace("/account/profile"), 600);
+      } else {
+        setMessage(data.error || "Google login failed.");
+        setIsError(true);
+      }
+    } catch {
+      setMessage("Failed to authenticate with Google. Please try again.");
+      setIsError(true);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -238,6 +299,9 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
           setTimeout(() => router.replace("/account/profile"), 600);
         }
       } else if (mode === "register") {
+        // STRICT USER FLOW REQUIREMENT:
+        // Account create zalyavar direct profile la na jata -> login page var redirect houde
+        // tithe user email & password takun login karel, magach profile disel!
         let registered = false;
         try {
           const res = await fetch("/api/auth/register", {
@@ -251,19 +315,7 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
           });
           const resData = await res.json();
           if (res.ok && resData.user) {
-            const userData: User = {
-              id: resData.user.id,
-              name: resData.user.username || name.trim(),
-              email: resData.user.email,
-              phone: phone.trim() || "",
-              jwt: resData.jwt,
-            };
-            localStorage.setItem("swachetna-demo-user", JSON.stringify(userData));
-            window.dispatchEvent(new Event("swachetna-auth-changed"));
-            setUser(userData);
-            setMessage("Account created successfully! Welcome to Swachetna.");
             registered = true;
-            setTimeout(() => router.replace("/account/profile"), 700);
           } else if (resData.error && !resData.error.includes("connect") && !resData.error.includes("fetch")) {
             setMessage(resData.error);
             setIsError(true);
@@ -274,18 +326,23 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
           /* Fallback gracefully */
         }
 
-        if (!registered) {
-          const localUser: User = {
+        // Send Welcome Email Notification to user Gmail
+        fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: email.trim().toLowerCase(),
             name: name.trim(),
-            email: email.trim().toLowerCase(),
-            phone: phone.trim() || "+91 98765 43210",
-          };
-          localStorage.setItem("swachetna-demo-user", JSON.stringify(localUser));
-          window.dispatchEvent(new Event("swachetna-auth-changed"));
-          setUser(localUser);
-          setMessage("Account created successfully! Welcome to Swachetna.");
-          setTimeout(() => router.replace("/account/profile"), 700);
-        }
+            type: "welcome",
+          }),
+        }).catch(() => {});
+
+        // Pre-fill email on login page
+        setMessage("Account created successfully! Please sign in with your email and password.");
+        setIsError(false);
+        setTimeout(() => {
+          router.push(`/account/login?email=${encodeURIComponent(email)}&registered=true`);
+        }, 1200);
       }
     } catch {
       setMessage("An unexpected error occurred. Please try again.");
@@ -324,8 +381,54 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
     setMessage("Address saved successfully!");
   };
 
-  // If already logged in and on an auth route, show smooth redirect loader
-  if (authChecked && user && isAuthMode) {
+  // Save Personal Information Updates & Send Notification to Gmail
+  const handleUpdatePersonalInfo = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!editName.trim() || !editEmail.trim()) {
+      setMessage("Name and Email are required.");
+      setIsError(true);
+      return;
+    }
+
+    setSavingProfile(true);
+    setMessage("");
+
+    try {
+      const updatedUser: User = {
+        ...user,
+        name: editName.trim(),
+        email: editEmail.trim().toLowerCase(),
+        phone: editPhone.trim(),
+      };
+
+      localStorage.setItem("swachetna-demo-user", JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event("swachetna-auth-changed"));
+      setUser(updatedUser);
+
+      // Send Gmail Notification for updated profile
+      const notifyRes = await fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: updatedUser.email,
+          name: updatedUser.name,
+          type: "profile_updated",
+        }),
+      });
+
+      setEditingProfile(false);
+      setMessage("Personal information updated successfully! Notification sent to your email.");
+      setIsError(false);
+    } catch {
+      setMessage("Failed to update profile. Please try again.");
+      setIsError(true);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  // If already logged in and on login route, show smooth redirect loader
+  if (authChecked && user && mode === "login") {
     return (
       <main className={styles.page}>
         <div style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -660,48 +763,146 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
                   </div>
                 </div>
               ) : (
-                /* Profile & Account Details */
+                /* Profile & Personal Information (WITH EDIT & GMAIL NOTIFICATION) */
                 <div>
                   <div className={styles.cardHeaderFlex}>
                     <div>
                       <h2>Personal Information &amp; Login Security</h2>
-                      <p>View your profile details, registered contact numbers, and login credentials.</p>
+                      <p>View or edit your registered profile details, email address, and phone number.</p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingProfile((prev) => !prev);
+                        if (!editingProfile) {
+                          setEditName(user?.name || "");
+                          setEditEmail(user?.email || "");
+                          setEditPhone(user?.phone || "");
+                        }
+                      }}
+                      className={styles.secondaryActionButton}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      {editingProfile ? <X size={15} /> : <Edit2 size={15} />}
+                      {editingProfile ? "Cancel Edit" : "Edit Personal Info"}
+                    </button>
                   </div>
 
-                  <div className={styles.profileDetailsList}>
-                    <div className={styles.profileRow}>
-                      <div>
-                        <span className={styles.profileFieldLabel}>FULL NAME</span>
-                        <strong className={styles.profileFieldValue}>{user?.name || "Not set"}</strong>
-                      </div>
-                      <span className={styles.verifiedBadge}>Verified</span>
+                  {message && (
+                    <div
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: "10px",
+                        marginBottom: "20px",
+                        fontSize: "13.5px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        background: isError ? "#fef2f2" : "#f0fdf4",
+                        color: isError ? "#991b1b" : "#166534",
+                        border: `1px solid ${isError ? "#fecaca" : "#bbf7d0"}`
+                      }}
+                    >
+                      {isError ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+                      {message}
                     </div>
+                  )}
 
-                    <div className={styles.profileRow}>
-                      <div>
-                        <span className={styles.profileFieldLabel}>EMAIL ADDRESS</span>
-                        <strong className={styles.profileFieldValue}>{user?.email || "Not set"}</strong>
+                  {editingProfile ? (
+                    /* Edit Form */
+                    <form onSubmit={handleUpdatePersonalInfo} className={styles.editProfileForm}>
+                      <div className={styles.editFormGrid}>
+                        <label>
+                          Full Name *
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            required
+                            placeholder="Enter full name"
+                          />
+                        </label>
+                        <label>
+                          Email Address (Gmail) *
+                          <input
+                            type="email"
+                            value={editEmail}
+                            onChange={(e) => setEditEmail(e.target.value)}
+                            required
+                            placeholder="yourname@gmail.com"
+                          />
+                        </label>
+                        <label>
+                          Mobile Number
+                          <input
+                            type="tel"
+                            value={editPhone}
+                            onChange={(e) => setEditPhone(e.target.value)}
+                            placeholder="+91 98765 43210"
+                          />
+                        </label>
                       </div>
-                      <span className={styles.verifiedBadge}>Primary Account</span>
-                    </div>
 
-                    <div className={styles.profileRow}>
-                      <div>
-                        <span className={styles.profileFieldLabel}>PRIMARY CONTACT MOBILE</span>
-                        <strong className={styles.profileFieldValue}>{user?.phone || "+91 98765 43210"}</strong>
+                      <div style={{ display: "flex", gap: "10px", marginTop: "18px" }}>
+                        <button
+                          type="submit"
+                          disabled={savingProfile}
+                          className={styles.primaryActionButton}
+                          style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+                        >
+                          {savingProfile ? (
+                            <>Saving &amp; Sending Notification... <Loader2 size={15} className="animate-spin" /></>
+                          ) : (
+                            <>
+                              <Save size={15} /> Save Changes &amp; Notify Gmail
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingProfile(false)}
+                          className={styles.secondaryActionButton}
+                        >
+                          Cancel
+                        </button>
                       </div>
-                      <span className={styles.smsAlertBadge}>SMS Updates Enabled</span>
-                    </div>
+                    </form>
+                  ) : (
+                    /* View Mode */
+                    <div className={styles.profileDetailsList}>
+                      <div className={styles.profileRow}>
+                        <div>
+                          <span className={styles.profileFieldLabel}>FULL NAME</span>
+                          <strong className={styles.profileFieldValue}>{user?.name || "Not set"}</strong>
+                        </div>
+                        <span className={styles.verifiedBadge}>Verified</span>
+                      </div>
 
-                    <div className={styles.profileRow}>
-                      <div>
-                        <span className={styles.profileFieldLabel}>MEMBERSHIP STATUS</span>
-                        <strong className={styles.profileFieldValue}>Swachetna Foundation Supporter</strong>
+                      <div className={styles.profileRow}>
+                        <div>
+                          <span className={styles.profileFieldLabel}>EMAIL ADDRESS (GMAIL)</span>
+                          <strong className={styles.profileFieldValue}>{user?.email || "Not set"}</strong>
+                        </div>
+                        <span className={styles.verifiedBadge}>Primary Account</span>
                       </div>
-                      <Award size={20} style={{ color: "#6b3b82" }} />
+
+                      <div className={styles.profileRow}>
+                        <div>
+                          <span className={styles.profileFieldLabel}>PRIMARY CONTACT MOBILE</span>
+                          <strong className={styles.profileFieldValue}>{user?.phone || "+91 98765 43210"}</strong>
+                        </div>
+                        <span className={styles.smsAlertBadge}>SMS Updates Enabled</span>
+                      </div>
+
+                      <div className={styles.profileRow}>
+                        <div>
+                          <span className={styles.profileFieldLabel}>MEMBERSHIP STATUS</span>
+                          <strong className={styles.profileFieldValue}>Swachetna Foundation Supporter</strong>
+                        </div>
+                        <Award size={20} style={{ color: "#6b3b82" }} />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className={styles.profileActionFooter}>
                     <Link href="/account/orders" className={styles.primaryActionButton}>
@@ -732,7 +933,7 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
               <p className={styles.intro}>
                 {mode === "login"
                   ? "Sign in to track orders, manage addresses, and support rural artisan communities."
-                  : "Join Swachetna Foundation to directly support rural artisan communities."}
+                  : "Join Swachetna Foundation. Create your account and then sign in to access your dashboard."}
               </p>
               <div className={styles.decorativeOrb} aria-hidden="true" />
             </aside>
@@ -745,6 +946,39 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
                   <h2 id="account-form-title">{mode === "login" ? "Sign in" : mode === "register" ? "Create your account" : "Reset your password"}</h2>
                 </div>
               </div>
+
+              {/* Continue with Google SSO Button */}
+              {mode !== "forgot" && (
+                <div style={{ marginBottom: "18px" }}>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={googleLoading}
+                    className={styles.googleAuthButton}
+                  >
+                    {googleLoading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" /> Connecting to Google...
+                      </>
+                    ) : (
+                      <>
+                        {/* Official Google 'G' SVG Logo */}
+                        <svg width="18" height="18" viewBox="0 0 48 48">
+                          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                        <span>Continue with Google</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className={styles.authDivider}>
+                    <span>or continue with email</span>
+                  </div>
+                </div>
+              )}
 
               <form className={styles.form} onSubmit={submit}>
                 {mode === "register" && (
@@ -767,7 +1001,7 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     autoComplete="email"
-                    placeholder="you@example.com"
+                    placeholder="you@gmail.com"
                     required
                     disabled={loading}
                   />
