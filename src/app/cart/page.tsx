@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Minus, Plus, ShieldCheck, ShoppingBag, Trash2, Tag, CheckCircle2, X } from "lucide-react";
-import { formatCurrency } from "../../data/products";
+import { formatCurrency, products as staticCatalog } from "../../data/products";
 import { useStore } from "../../context/StoreContext";
 import ProductArtwork from "../../components/products/ProductArtwork/ProductArtwork";
 import { useState, useEffect } from "react";
@@ -96,15 +96,34 @@ export default function CartPage() {
   const lines = cart
     .map((line) => {
       const lower = String(line.productId).toLowerCase().trim();
-      const product = allProducts.find(
-        (p) =>
-          String(p.id).toLowerCase().trim() === lower ||
-          (p.slug && p.slug.toLowerCase().trim() === lower) ||
-          (p.sku && p.sku.toLowerCase().trim() === lower)
-      );
+      const product =
+        allProducts.find(
+          (p) =>
+            String(p.id).toLowerCase().trim() === lower ||
+            (p.slug && p.slug.toLowerCase().trim() === lower) ||
+            (p.sku && p.sku.toLowerCase().trim() === lower)
+        ) ||
+        staticCatalog.find(
+          (p) =>
+            String(p.id).toLowerCase().trim() === lower ||
+            (p.slug && p.slug.toLowerCase().trim() === lower) ||
+            (p.sku && p.sku.toLowerCase().trim() === lower)
+        ) ||
+        ({
+          id: line.productId,
+          slug: line.slug || line.productId,
+          name: line.name || "Handcrafted Product",
+          price: typeof line.price === "number" ? line.price : 0,
+          category: line.category || "Collection",
+          description: line.name || "",
+          shortDescription: line.name || "",
+          stock: 99,
+          image: line.image,
+          sku: line.sku,
+        } as any);
       return { ...line, product };
     })
-    .filter((line): line is { productId: string; quantity: number; product: NonNullable<typeof line.product> } => Boolean(line.product));
+    .filter((line) => Boolean(line.product));
   const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0);
   const shipping = subtotal >= 1500 || subtotal === 0 ? 0 : 99;
   const discountAmount = appliedCoupon ? Math.min(subtotal, appliedCoupon.discount) : 0;

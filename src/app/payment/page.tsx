@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, CreditCard, LockKeyhole, Smartphone, Truck } from "lucide-react";
-import { formatCurrency } from "../../data/products";
+import { formatCurrency, products as staticCatalog } from "../../data/products";
 import { useStore } from "../../context/StoreContext";
 import { CHECKOUT_DRAFT_KEY, PAYMENT_METHOD_LABELS, type CheckoutDraft, type DemoOrder, type PaymentMethod } from "../../types/checkout";
 import styles from "./payment.module.css";
@@ -47,13 +47,35 @@ export default function PaymentPage() {
   const findMatchingProduct = (lookupId: string) => {
     if (!lookupId) return undefined;
     const lower = String(lookupId).toLowerCase().trim();
-    return allProducts.find((p) =>
+    const foundInLive = allProducts.find((p) =>
+      String(p.id).toLowerCase().trim() === lower ||
+      (p.slug && p.slug.toLowerCase().trim() === lower) ||
+      (p.sku && p.sku.toLowerCase().trim() === lower)
+    );
+    if (foundInLive) return foundInLive;
+
+    return staticCatalog.find((p) =>
       String(p.id).toLowerCase().trim() === lower ||
       (p.slug && p.slug.toLowerCase().trim() === lower) ||
       (p.sku && p.sku.toLowerCase().trim() === lower)
     );
   };
-  const lines = useMemo(() => cart.map((line) => ({ ...line, product: findMatchingProduct(line.productId) })).filter((line) => line.product), [cart, allProducts]);
+  const lines = useMemo(() => cart.map((line) => {
+    const matched = findMatchingProduct(line.productId);
+    const product = matched || ({
+      id: line.productId,
+      slug: (line as any).slug || line.productId,
+      name: (line as any).name || "Handcrafted Product",
+      price: typeof (line as any).price === "number" ? (line as any).price : 0,
+      image: (line as any).image || "",
+      sku: (line as any).sku || "",
+      category: (line as any).category || "Collection",
+      description: "",
+      shortDescription: "",
+      stock: 99,
+    } as any);
+    return { ...line, product };
+  }), [cart, allProducts]);
 
   useEffect(() => {
     try {

@@ -4,7 +4,16 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Product } from "../types/product";
 import { products as staticProducts } from "../data/products";
 
-type CartLine = { productId: string; quantity: number };
+type CartLine = {
+  productId: string;
+  quantity: number;
+  price?: number;
+  name?: string;
+  image?: string;
+  slug?: string;
+  sku?: string;
+  category?: string;
+};
 type SavedStore = { cart?: unknown; wishlist?: unknown };
 type StoreValue = {
   cart: CartLine[];
@@ -55,7 +64,16 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
   const findProduct = useCallback((lookupId: string): Product | undefined => {
     if (!lookupId) return undefined;
     const lower = String(lookupId).toLowerCase().trim();
-    return products.find(
+    const fromCurrent = products.find(
+      (p) =>
+        String(p.id).toLowerCase().trim() === lower ||
+        (p.slug && p.slug.toLowerCase().trim() === lower) ||
+        (p.sku && p.sku.toLowerCase().trim() === lower)
+    );
+    if (fromCurrent) return fromCurrent;
+
+    // Fallback to static catalog if not in current list
+    return staticProducts.find(
       (p) =>
         String(p.id).toLowerCase().trim() === lower ||
         (p.slug && p.slug.toLowerCase().trim() === lower) ||
@@ -103,6 +121,7 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
     if (product.stock < 1) { setNotice(`${product.name} is currently out of stock.`); return; }
     const quantity = Math.min(product.stock, Math.max(1, Math.floor(requestedQuantity)));
     const targetKey = product.id || product.slug;
+    const price = typeof product.price === "number" && product.price > 0 ? product.price : 0;
 
     setCart((current) => {
       const foundIdx = current.findIndex(
@@ -115,21 +134,39 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
           ...existing,
           productId: targetKey,
           quantity: Math.min(product.stock, existing.quantity + quantity),
+          price: price || existing.price || 0,
+          name: product.name || existing.name,
+          image: product.image || existing.image,
+          slug: product.slug || existing.slug,
+          sku: product.sku || existing.sku,
+          category: product.category || existing.category,
         };
         return updated;
       }
-      return [...current, { productId: targetKey, quantity }];
+      return [
+        ...current,
+        {
+          productId: targetKey,
+          quantity,
+          price,
+          name: product.name,
+          image: product.image,
+          slug: product.slug,
+          sku: product.sku,
+          category: product.category,
+        },
+      ];
     });
     setNotice(`${product.name} added to your shopping bag.`);
   }, []);
 
   const setQuantity = useCallback((productId: string, quantity: number) => {
     const product = findProduct(productId);
-    if (!product) return;
-    const clamped = Math.min(product.stock, Math.max(1, Math.floor(quantity)));
+    const maxStock = product?.stock && product.stock > 0 ? product.stock : 99;
+    const clamped = Math.min(maxStock, Math.max(1, Math.floor(quantity)));
     setCart((current) =>
       current.map((line) => {
-        if (line.productId === productId || line.productId === product.id || line.productId === product.slug) {
+        if (line.productId === productId || (product && (line.productId === product.id || line.productId === product.slug))) {
           return { ...line, quantity: clamped };
         }
         return line;
@@ -170,12 +207,15 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
 
   const clearNotice = useCallback(() => setNotice(""), []);
 
-  // Compute live subtotal and cartCount using flexible findProduct
+  // Compute live subtotal and cartCount using flexible findProduct + fallback to cart line snapshot
   const validCartLines = useMemo(() => {
-    return cart.map((line) => ({
-      ...line,
-      product: findProduct(line.productId),
-    })).filter((item): item is CartLine & { product: Product } => Boolean(item.product));
+    return cart.map((line) => {
+      const product = findProduct(line.productId);
+      return {
+        ...line,
+        product,
+      };
+    });
   }, [cart, findProduct]);
 
   const cartCount = useMemo(() => {
@@ -183,7 +223,12 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
   }, [validCartLines]);
 
   const subtotal = useMemo(() => {
-    return validCartLines.reduce((total, line) => total + line.product.price * line.quantity, 0);
+    return validCartLines.reduce((total, line) => {
+      const price = (line.product && typeof line.product.price === "number")
+        ? line.product.price
+        : (typeof line.price === "number" ? line.price : 0);
+      return total + price * line.quantity;
+    }, 0);
   }, [validCartLines]);
 
   const value = useMemo<StoreValue>(() => ({
