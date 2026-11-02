@@ -293,7 +293,7 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
       {section === "campaigns" && <a className={styles.secondaryButton} href="#new-program"><Plus size={15} /> New program</a>}
     </div></div>
 
-    {section === "dashboard" && <>{data.ready && data.orders.length === 0 && <div className={styles.demoBanner}><span><Sparkles size={14} /> SAMPLE DATA</span><p>Preview orders help explain this dashboard. They are examples only and are not saved as real sales.</p></div>}<Dashboard products={data.products} orders={data.orders.length ? data.orders : samplePreviewOrders} isPreview={!data.orders.length} onQuick={() => setQuickActions((value) => !value)} quickOpen={quickActions} /></>}
+    {section === "dashboard" && <>{data.ready && data.orders.length === 0 && <div className={styles.demoBanner}><span><Sparkles size={14} /> SAMPLE DATA</span><p>Preview orders help explain this dashboard. They are examples only and are not saved as real sales.</p></div>}<Dashboard products={data.products} orders={data.orders.length ? data.orders : samplePreviewOrders} isPreview={!data.orders.length} onQuick={() => setQuickActions((value) => !value)} quickOpen={quickActions} onSelectOrder={(order) => setSelectedOrder(order)} /></>}
     {section === "products" && (
       <ProductSection
         allProducts={data.products}
@@ -381,7 +381,7 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
   </div>;
 }
 
-function Dashboard({ products, orders, isPreview, onQuick, quickOpen }: { products: AdminProduct[]; orders: AdminOrder[]; isPreview: boolean; onQuick: () => void; quickOpen: boolean }) {
+function Dashboard({ products, orders, isPreview, onQuick, quickOpen, onSelectOrder }: { products: AdminProduct[]; orders: AdminOrder[]; isPreview: boolean; onQuick: () => void; quickOpen: boolean; onSelectOrder?: (order: AdminOrder) => void }) {
   const revenue = orders.reduce((sum, order) => sum + order.total, 0);
   const customers = new Set(orders.map((order) => order.customer.trim().toLowerCase()).filter(Boolean)).size;
   const average = orders.length ? Math.round(revenue / orders.length) : 0;
@@ -392,41 +392,210 @@ function Dashboard({ products, orders, isPreview, onQuick, quickOpen }: { produc
   const pending = orders.filter((order) => order.status === "Pending" || order.status === "Processing").length;
   const shipped = orders.filter((order) => order.status === "Shipped").length;
   const totalOrders = orders.length;
+
   const fulfillmentStatuses = [
-    { label: "Delivered", description: "Successfully completed", value: delivered, icon: CheckCircle2, className: styles.fulfillmentDelivered },
-    { label: "In progress", description: "Processing and pending", value: pending, icon: Clock3, className: styles.fulfillmentPending },
-    { label: "Shipped", description: "On the way", value: shipped, icon: Truck, className: styles.fulfillmentShipped },
+    { label: "Delivered", description: "Successfully completed", value: delivered, icon: CheckCircle2, className: styles.fulfillmentDelivered, href: "/admin/orders" },
+    { label: "In progress", description: "Processing and pending", value: pending, icon: Clock3, className: styles.fulfillmentPending, href: "/admin/orders" },
+    { label: "Shipped", description: "On the way", value: shipped, icon: Truck, className: styles.fulfillmentShipped, href: "/admin/orders" },
   ];
+
   const metricData = [
-    { label: isPreview ? "Sample revenue" : "Recorded revenue", value: formatCurrency(revenue), delta: isPreview ? "Preview only ? not real sales" : `${orders.length} recorded orders`, icon: TrendingUp, tint: "purple" },
-    { label: "Orders", value: String(orders.length), delta: isPreview ? "Sample records for preview" : `${pending} need attention`, icon: Package, tint: "peach" },
-    { label: "Customers", value: String(customers), delta: isPreview ? "Example customer records" : "Based on recorded orders", icon: Users, tint: "blue" },
-    { label: isPreview ? "Sample average" : "Average order", value: formatCurrency(average), delta: isPreview ? "Example value only" : "Calculated from recorded orders", icon: ShoppingCart, tint: "green" },
+    {
+      label: isPreview ? "Sample revenue" : "Recorded revenue",
+      value: formatCurrency(revenue),
+      delta: isPreview ? "Click to view sales reports" : `${orders.length} recorded orders · View reports →`,
+      icon: TrendingUp,
+      tint: "purple",
+      href: "/admin/reports"
+    },
+    {
+      label: "Orders",
+      value: String(orders.length),
+      delta: isPreview ? "Click to manage orders & dispatches" : `${pending} need attention · Manage →`,
+      icon: Package,
+      tint: "peach",
+      href: "/admin/orders"
+    },
+    {
+      label: "Customers",
+      value: String(customers),
+      delta: isPreview ? "Click to view customer records" : "Based on recorded orders · View →",
+      icon: Users,
+      tint: "blue",
+      href: "/admin/customers"
+    },
+    {
+      label: isPreview ? "Sample average" : "Average order",
+      value: formatCurrency(average),
+      delta: isPreview ? "Click to view order analytics" : "Calculated from orders · View orders →",
+      icon: ShoppingCart,
+      tint: "green",
+      href: "/admin/orders"
+    },
   ];
+
   return <>
-    <section className={styles.metrics}>{metricData.map(({ label, value, delta, icon: Icon, tint }) => <article className={styles.metricCard} key={label}><div className={styles.metricTop}><span>{label}</span><span className={`${styles.metricIcon} ${styles[tint]}`}><Icon size={17} /></span></div><div className={styles.metricValue}>{value}</div><div className={styles.metricFoot}>{delta}</div></article>)}</section>
+    {/* Fully Working & Interactive Dashboard Metric Cards */}
+    <section className={styles.metrics}>
+      {metricData.map(({ label, value, delta, icon: Icon, tint, href }) => (
+        <Link
+          href={href}
+          key={label}
+          className={styles.metricCard}
+          style={{ textDecoration: "none", cursor: "pointer", display: "block" }}
+          title={`Click to open ${label} workspace`}
+        >
+          <div className={styles.metricTop}>
+            <span>{label}</span>
+            <span className={`${styles.metricIcon} ${styles[tint]}`}>
+              <Icon size={17} />
+            </span>
+          </div>
+          <div className={styles.metricValue}>{value}</div>
+          <div className={styles.metricFoot} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span>{delta}</span>
+            <ArrowUpRight size={13} color="#7451ba" />
+          </div>
+        </Link>
+      ))}
+    </section>
+
     <div className={styles.dashboardGrid}>
-      <section className={`${styles.panel} ${styles.revenuePanel}`}><div className={styles.panelHeading}><div><span className={styles.eyebrow}>{isPreview ? "SAMPLE ORDER DATA" : "ORDER RECORDS"}</span><h2>Revenue by month</h2></div><span className={styles.dataSource}><CalendarDays size={13} /> {isPreview ? "Preview sample" : "Last 6 months"}</span></div><div className={styles.chartSummary}><strong>{formatCurrency(revenue)}</strong><span>{orders.length} orders</span></div><div className={styles.chart}><div className={styles.chartLabels}><span>{formatCurrency(maxRevenue)}</span><span>{formatCurrency(maxRevenue * .75)}</span><span>{formatCurrency(maxRevenue * .5)}</span><span>{formatCurrency(maxRevenue * .25)}</span><span>₹ 0</span></div><div className={styles.chartPlot}><div className={styles.chartGuides}><i /><i /><i /><i /><i /></div><div className={styles.liveBars}>{months.map((month) => { const barHeight = month.total ? Math.max(4, (month.total / maxRevenue) * 78) : 0; return <div className={styles.liveBarColumn} key={month.label} title={`${month.label}: ${formatCurrency(month.total)}`}><strong className={styles.liveBarValue} style={{ bottom: `calc(${barHeight}% + 4px)` }}>{formatCurrency(month.total)}</strong><span style={{ height: `${barHeight}%` }} /><small>{month.label}</small></div>; })}</div></div></div><p className={styles.chartNote}><span className={styles.chartNoteDot} /><strong>{isPreview ? "Preview data" : "Recorded data"}</strong><span>{isPreview ? "Sample amounts are shown for layout preview only; they are not real sales." : "Amounts are calculated from orders saved in this browser."}</span></p></section>
+      <section className={`${styles.panel} ${styles.revenuePanel}`}>
+        <div className={styles.panelHeading}>
+          <div>
+            <span className={styles.eyebrow}>{isPreview ? "SAMPLE ORDER DATA" : "ORDER RECORDS"}</span>
+            <h2>Revenue by month</h2>
+          </div>
+          <Link href="/admin/reports" className={styles.dataSource} style={{ textDecoration: "none" }} title="Click to view detailed reports">
+            <CalendarDays size={13} /> {isPreview ? "Preview sample" : "Last 6 months"} · View Reports →
+          </Link>
+        </div>
+        <div className={styles.chartSummary}>
+          <strong>{formatCurrency(revenue)}</strong>
+          <span>{orders.length} orders</span>
+        </div>
+        <div className={styles.chart}>
+          <div className={styles.chartLabels}>
+            <span>{formatCurrency(maxRevenue)}</span>
+            <span>{formatCurrency(maxRevenue * .75)}</span>
+            <span>{formatCurrency(maxRevenue * .5)}</span>
+            <span>{formatCurrency(maxRevenue * .25)}</span>
+            <span>₹ 0</span>
+          </div>
+          <div className={styles.chartPlot}>
+            <div className={styles.chartGuides}><i /><i /><i /><i /><i /></div>
+            <div className={styles.liveBars}>
+              {months.map((month) => {
+                const barHeight = month.total ? Math.max(4, (month.total / maxRevenue) * 78) : 0;
+                return (
+                  <div className={styles.liveBarColumn} key={month.label} title={`${month.label}: ${formatCurrency(month.total)}`}>
+                    <strong className={styles.liveBarValue} style={{ bottom: `calc(${barHeight}% + 4px)` }}>{formatCurrency(month.total)}</strong>
+                    <span style={{ height: `${barHeight}%` }} />
+                    <small>{month.label}</small>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <p className={styles.chartNote}>
+          <span className={styles.chartNoteDot} />
+          <strong>{isPreview ? "Preview data" : "Recorded data"}</strong>
+          <span>{isPreview ? "Sample amounts are shown for layout preview only; they are not real sales." : "Amounts are calculated from orders saved in this browser."}</span>
+        </p>
+      </section>
+
       <section className={`${styles.panel} ${styles.orderPanel}`} aria-labelledby="order-status-heading">
         <div className={styles.panelHeading}>
-          <div><span className={styles.eyebrow}>FULFILMENT</span><h2 id="order-status-heading">Order status</h2></div>
-          <span className={styles.fulfillmentTotal}>{totalOrders} total</span>
+          <div>
+            <span className={styles.eyebrow}>FULFILMENT</span>
+            <h2 id="order-status-heading">Order status</h2>
+          </div>
+          <Link href="/admin/orders" className={styles.fulfillmentTotal} style={{ textDecoration: "none" }}>
+            {totalOrders} total · Manage →
+          </Link>
         </div>
         <div className={styles.fulfillmentSummary}>
-          <div className={styles.fulfillmentSummaryText}><span>Order distribution</span><strong>{totalOrders ? `${totalOrders} orders` : "No orders yet"}</strong></div>
+          <div className={styles.fulfillmentSummaryText}>
+            <span>Order distribution</span>
+            <strong>{totalOrders ? `${totalOrders} orders` : "No orders yet"}</strong>
+          </div>
           <div className={styles.fulfillmentTrack} role="img" aria-label={`${delivered} delivered, ${pending} in progress, ${shipped} shipped`}>
             <span className={styles.fulfillmentDelivered} style={{ width: `${totalOrders ? (delivered / totalOrders) * 100 : 0}%` }} />
             <span className={styles.fulfillmentPending} style={{ width: `${totalOrders ? (pending / totalOrders) * 100 : 0}%` }} />
             <span className={styles.fulfillmentShipped} style={{ width: `${totalOrders ? (shipped / totalOrders) * 100 : 0}%` }} />
           </div>
         </div>
-        <div className={styles.fulfillmentList}>{fulfillmentStatuses.map(({ label, description, value, icon: Icon, className }) => <article className={styles.fulfillmentItem} key={label}>
-          <span className={`${styles.fulfillmentIcon} ${className}`}><Icon size={16} /></span>
-          <span className={styles.fulfillmentCopy}><strong>{label}</strong><small>{description}</small></span>
-          <strong className={styles.fulfillmentCount}>{value}</strong>
-        </article>)}</div>
+        <div className={styles.fulfillmentList}>
+          {fulfillmentStatuses.map(({ label, description, value, icon: Icon, className, href }) => (
+            <Link href={href} className={styles.fulfillmentItem} key={label} style={{ textDecoration: "none", cursor: "pointer" }} title={`Click to view ${label} orders in Orders workspace`}>
+              <span className={`${styles.fulfillmentIcon} ${className}`}><Icon size={16} /></span>
+              <span className={styles.fulfillmentCopy}>
+                <strong>{label}</strong>
+                <small>{description}</small>
+              </span>
+              <strong className={styles.fulfillmentCount}>{value}</strong>
+            </Link>
+          ))}
+        </div>
       </section>
-      <section className={`${styles.panel} ${styles.recentPanel}`}><div className={styles.panelHeading}><div><span className={styles.eyebrow}>{isPreview ? "SAMPLE RECORDS" : "LATEST RECORDS"}</span><h2>Recent orders</h2></div><Link href="/admin/orders">View orders <ArrowUpRight size={14} /></Link></div><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>DATE</th><th>STATUS</th><th className={styles.alignRight}>TOTAL</th></tr></thead><tbody>{[...orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5).map((order) => <tr key={order.id}><td><strong className={styles.orderId}>{order.id}</strong></td><td><span className={styles.customerName}>{order.customer}</span></td><td>{formatDate(order.createdAt)}</td><td><StatusBadge status={order.status} /></td><td className={styles.alignRight}><strong>{formatCurrency(order.total)}</strong></td></tr>)}</tbody></table></div></section>
+
+      <section className={`${styles.panel} ${styles.recentPanel}`}>
+        <div className={styles.panelHeading}>
+          <div>
+            <span className={styles.eyebrow}>{isPreview ? "SAMPLE RECORDS" : "LATEST RECORDS"}</span>
+            <h2>Recent orders</h2>
+          </div>
+          <Link href="/admin/orders" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+            View orders <ArrowUpRight size={14} />
+          </Link>
+        </div>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ORDER</th>
+                <th>CUSTOMER</th>
+                <th>DATE</th>
+                <th>STATUS</th>
+                <th className={styles.alignRight}>TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5).map((order) => (
+                <tr
+                  key={order.id}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    if (onSelectOrder) onSelectOrder(order);
+                  }}
+                  title="Click to view full order invoice & details"
+                >
+                  <td>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onSelectOrder) onSelectOrder(order);
+                      }}
+                      style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
+                    >
+                      <strong className={styles.orderId} style={{ color: "#7652c8", textDecoration: "underline" }}>
+                        {order.id}
+                      </strong>
+                    </button>
+                  </td>
+                  <td><span className={styles.customerName}>{order.customer}</span></td>
+                  <td>{formatDate(order.createdAt)}</td>
+                  <td><StatusBadge status={order.status} /></td>
+                  <td className={styles.alignRight}><strong>{formatCurrency(order.total)}</strong></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
       <section className={`${styles.panel} ${styles.quickPanel}`}>
         <div className={styles.panelHeading}>
           <div><span className={styles.eyebrow}>QUICK ACCESS</span><h2>What would you like to do?</h2><p>Jump straight to a common workspace task.</p></div>
