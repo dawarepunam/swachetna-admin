@@ -32,9 +32,9 @@
 }
 
 .overHero.scrolled {
-  background: rgba(255, 255, 255, 0.95);
-  border-bottom-color: rgba(54, 39, 65, 0.12);
-  box-shadow: 0 8px 28px rgba(39, 24, 49, 0.08);
+  background: rgba(43, 18, 63, 0.98);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 20px rgba(25, 9, 38, 0.3);
 }
 
 .container {
@@ -67,9 +67,7 @@
   transition: filter .28s ease;
 }
 
-.overHero.scrolled .logoImage {
-  filter: none;
-}
+.overHero.scrolled .logoImage { filter: brightness(0) invert(1); }
 
 /* =========================
    DESKTOP NAVIGATION
@@ -133,9 +131,7 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.overHero.scrolled .desktopNavigation a {
-  color: #4b3c54;
-}
+.overHero.scrolled .desktopNavigation a { color: #e1d4eb; }
 
 .overHero.scrolled .desktopNavigation a:hover,
 .overHero.scrolled .desktopNavigation a.active {
@@ -193,9 +189,7 @@
   transform: translateY(-1px);
 }
 
-.overHero.scrolled .actionButton {
-  color: #433448;
-}
+.overHero.scrolled .actionButton { color: #f0d9ff; }
 
 .overHero.scrolled .actionButton:hover {
   background: rgba(91, 52, 117, .1);
