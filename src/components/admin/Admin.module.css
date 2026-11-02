@@ -1394,7 +1394,17 @@
 
 .statStrip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin: 0 0 18px;
+  border: 1px solid #eae5f2;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(45, 25, 75, 0.03);
+}
+
+.statStrip5 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   margin: 0 0 18px;
   border: 1px solid #eae5f2;
   border-radius: 12px;

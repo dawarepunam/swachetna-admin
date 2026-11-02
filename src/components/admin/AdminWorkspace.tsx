@@ -1027,8 +1027,8 @@ function OrdersSection({
 
   return (
     <>
-      {/* Interactive Metric Filter Cards */}
-      <div className={styles.statStrip}>
+      {/* Interactive Metric Filter Cards - All 5 cards evenly aligned in single top row */}
+      <div className={`${styles.statStrip} ${styles.statStrip5}`}>
         <div
           className={`${styles.statCardInteractive} ${status === "All statuses" ? styles.statCardActive : ""}`}
           onClick={() => onStatusFilter("All statuses")}
