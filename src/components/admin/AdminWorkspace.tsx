@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { ArrowDownRight, ArrowUpRight, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Download, Eye, FileText, Filter, HeartHandshake, MoreHorizontal, Package, Plus, Printer, Search, Shapes, ShoppingCart, SlidersHorizontal, Sparkles, TrendingUp, Truck, Upload, Users, X } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Download, ExternalLink, Eye, FileText, Filter, HeartHandshake, MoreHorizontal, Package, Plus, Printer, Search, Shapes, ShoppingCart, SlidersHorizontal, Sparkles, Trash2, TrendingUp, Truck, Upload, Users, X } from "lucide-react";
 import { formatCurrency } from "../../data/products";
 import { useAdminData, type AdminCampaign, type AdminCategory, type AdminCoupon, type AdminOrder, type AdminProduct } from "./AdminData";
 import styles from "./Admin.module.css";
