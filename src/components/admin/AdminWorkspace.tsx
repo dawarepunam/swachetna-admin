@@ -2402,25 +2402,39 @@ function InquiriesSection({
                     {sendingReply ? "Saving response..." : <><Check size={14} /> Send &amp; Save Response</>}
                   </button>
 
-                  <a
-                    href={`mailto:${selectedInquiry.email}?subject=Re: ${encodeURIComponent(selectedInquiry.subject || 'Your Swachetna Foundation Inquiry')}&body=${encodeURIComponent(replyInput || 'Hello ' + selectedInquiry.name + ',
+                  <div style={{ display: "inline-flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                    {/* Direct Web Gmail Compose with multiple account support */}
+                    <a
+                      href={`https://mail.google.com/mail/u/?authuser=0&view=cm&fs=1&to=${encodeURIComponent(selectedInquiry.email)}&su=${encodeURIComponent('Re: ' + (selectedInquiry.subject || 'Your Swachetna Foundation Inquiry'))}&body=${encodeURIComponent(replyInput || 'Hello ' + selectedInquiry.name + ',\n\nThank you for contacting Swachetna Foundation!\n\n')}`}
+                      className={styles.primaryButton}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        if (!selectedInquiry.adminReply && replyInput.trim()) {
+                          onStatus(selectedInquiry.id, "Responded", replyInput.trim());
+                        }
+                      }}
+                      style={{ fontSize: "12px", padding: "7px 15px", display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg, #ea4335, #c5221f)", borderColor: "#b31412", boxShadow: "0 2px 6px rgba(234, 67, 53, 0.28)" }}
+                      title="Open directly in Gmail web composer"
+                    >
+                      Compose in Gmail ✉️
+                    </a>
 
-Thank you for reaching out to Swachetna Foundation!
-
-')}`}
-                    className={styles.secondaryButton}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => {
-                      if (!selectedInquiry.adminReply && replyInput.trim()) {
-                        onStatus(selectedInquiry.id, "Responded", replyInput.trim());
-                      }
-                    }}
-                    style={{ fontSize: "12px", padding: "7px 14px", display: "inline-flex", alignItems: "center", gap: "6px", color: "#59368d" }}
-                    title="Send prefilled email directly via Gmail client"
-                  >
-                    Open in Gmail ✉️
-                  </a>
+                    {/* Standard mailto fallback */}
+                    <a
+                      href={`mailto:${selectedInquiry.email}?subject=Re: ${encodeURIComponent(selectedInquiry.subject || 'Your Swachetna Foundation Inquiry')}&body=${encodeURIComponent(replyInput || 'Hello ' + selectedInquiry.name + ',\n\nThank you for contacting Swachetna Foundation!\n\n')}`}
+                      className={styles.secondaryButton}
+                      onClick={() => {
+                        if (!selectedInquiry.adminReply && replyInput.trim()) {
+                          onStatus(selectedInquiry.id, "Responded", replyInput.trim());
+                        }
+                      }}
+                      style={{ fontSize: "12px", padding: "7px 12px", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                      title="Open in default mail client"
+                    >
+                      Default Mail
+                    </a>
+                  </div>
                 </div>
               </form>
             </div>
