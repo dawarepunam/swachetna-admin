@@ -1408,16 +1408,36 @@
   gap: 6px;
   padding: 15px 20px;
   border-right: 1px solid #f0ecf5;
+  transition: all 0.2s ease;
 }
 
 .statStrip>div:last-child {
   border-right: 0;
 }
 
+.statCardInteractive {
+  cursor: pointer;
+  user-select: none;
+  border-radius: 10px;
+}
+
+.statCardInteractive:hover {
+  background: #fbf9fd;
+  transform: translateY(-1px);
+}
+
+.statCardActive {
+  background: #f4edf8 !important;
+  box-shadow: inset 0 0 0 2px #7451ba;
+}
+
 .statStrip span {
   color: #81788e;
   font-size: 12.5px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .statStrip strong {
@@ -1427,6 +1447,10 @@
 
 .warningText {
   color: #b77126 !important;
+}
+
+.dangerText {
+  color: #dc2626 !important;
 }
 
 .tableToolbar {

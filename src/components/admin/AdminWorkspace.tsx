@@ -221,8 +221,42 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
     </div></div>
 
     {section === "dashboard" && <>{data.ready && data.orders.length === 0 && <div className={styles.demoBanner}><span><Sparkles size={14} /> SAMPLE DATA</span><p>Preview orders help explain this dashboard. They are examples only and are not saved as real sales.</p></div>}<Dashboard products={data.products} orders={data.orders.length ? data.orders : samplePreviewOrders} isPreview={!data.orders.length} onQuick={() => setQuickActions((value) => !value)} quickOpen={quickActions} /></>}
-    {section === "products" && <ProductSection products={visibleProducts} categories={data.categories} search={search} onSearch={setSearch} category={categoryFilter} onCategory={setCategoryFilter} status={statusFilter} onStatus={setStatusFilter} sort={sort} onSort={setSort} onEdit={(product) => { setEditingProduct(product); setProductDialog(true); }} onDelete={handleDeleteProduct} />}
-    {section === "inventory" && <InventorySection products={visibleProducts} categories={data.categories} search={search} onSearch={setSearch} category={categoryFilter} onCategory={setCategoryFilter} stock={stockFilter} onStock={setStockFilter} sort={sort} onSort={setSort} advanced={advancedFilters} onAdjust={updateStock} />}
+    {section === "products" && (
+      <ProductSection
+        allProducts={data.products}
+        products={visibleProducts}
+        categories={data.categories}
+        search={search}
+        onSearch={setSearch}
+        category={categoryFilter}
+        onCategory={setCategoryFilter}
+        status={statusFilter}
+        onStatus={setStatusFilter}
+        stock={stockFilter}
+        onStock={setStockFilter}
+        sort={sort}
+        onSort={setSort}
+        onEdit={(product) => { setEditingProduct(product); setProductDialog(true); }}
+        onDelete={handleDeleteProduct}
+      />
+    )}
+    {section === "inventory" && (
+      <InventorySection
+        allProducts={data.products}
+        products={visibleProducts}
+        categories={data.categories}
+        search={search}
+        onSearch={setSearch}
+        category={categoryFilter}
+        onCategory={setCategoryFilter}
+        stock={stockFilter}
+        onStock={setStockFilter}
+        sort={sort}
+        onSort={setSort}
+        advanced={advancedFilters}
+        onAdjust={updateStock}
+      />
+    )}
     {section === "orders" && <>{data.ready && data.orders.length === 0 && <div className={styles.demoBanner}><span><Sparkles size={14} /> SAMPLE ORDERS</span><p>These example orders are for preview only. They are not real purchases and are not saved as store orders.</p></div>}<OrdersSection orders={visibleOrders} isPreview={!data.orders.length} search={search} onSearch={setSearch} status={statusFilter} onStatusFilter={setStatusFilter} onStatus={(id, status) => data.setOrderStatus(id, status)} onExport={() => exportOrders(orderRecords)} onSelectOrder={(order) => setSelectedOrder(order)} /></>}
     {section === "coupons" && <CouponsSection coupons={data.coupons} onSave={(updated) => data.syncWorkspace({ coupons: updated })} />}
     {section === "reviews" && <ReviewsSection products={data.products} onSaveProducts={(updated) => data.syncWorkspace({ products: updated })} />}
@@ -336,16 +370,560 @@ function Dashboard({ products, orders, isPreview, onQuick, quickOpen }: { produc
     </div>
   </>;
 }
-function ProductSection({ products, categories, search, onSearch, category, onCategory, status, onStatus, sort, onSort, onEdit, onDelete }: { products: AdminProduct[]; categories: AdminCategory[]; search: string; onSearch: (value: string) => void; category: string; onCategory: (value: string) => void; status: string; onStatus: (value: string) => void; sort: string; onSort: (value: string) => void; onEdit: (product: AdminProduct) => void; onDelete: (product: AdminProduct) => void }) {
-  return <><div className={styles.statStrip}><div><span>Products</span><strong>{products.length}</strong></div><div><span>Published</span><strong>{products.filter((item) => item.status === "Published").length}</strong></div><div><span>Low stock</span><strong className={styles.warningText}>{products.filter((item) => item.stock > 0 && item.stock < 10).length}</strong></div><div><span>Out of stock</span><strong>{products.filter((item) => item.stock === 0).length}</strong></div></div><section className={styles.panel}><div className={styles.tableToolbar}><div className={styles.tableSearch}><Search size={16} /><input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search product, collection or SKU..." /></div><div className={styles.toolbarActions}><select className={styles.filterSelect} value={category} onChange={(event) => onCategory(event.target.value)}><option>All categories</option>{categories.map((item) => <option key={item.slug}>{item.name}</option>)}</select><select className={styles.filterSelect} value={status} onChange={(event) => onStatus(event.target.value)}><option>All statuses</option><option>Published</option><option>Draft</option></select><select className={styles.filterSelect} value={sort} onChange={(event) => onSort(event.target.value)}><option value="name">Name</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="stock-low">Lowest stock</option></select></div></div><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>PRODUCT</th><th>CATEGORY</th><th>SKU</th><th>PRICE</th><th>STOCK</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody>{products.map((item, index) => <tr key={item.id}><td><div className={styles.productCell}><span className={`${styles.productThumb} ${styles[`thumb${index % 4}`]}`} style={item.image ? { padding: 0, overflow: "hidden" } : undefined}>{item.image ? <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Package size={17} />}</span><span><strong>{item.name}</strong><small className={styles.tableSub}>{item.slug}</small></span></div></td><td>
-  <div><strong>{item.category}</strong></div>
-  {item.subcategory && <small style={{ color: "#806d89", fontSize: "11px", display: "inline-block", background: "#f5f0f7", padding: "1px 6px", borderRadius: "8px", marginTop: "2px" }}>{item.subcategory}</small>}
-</td><td className={styles.sku}>{item.sku}</td><td><strong>{formatCurrency(item.price)}</strong></td><td><span className={`${styles.stockValue} ${item.stock < 10 ? styles.stockLow : ""}`}><i />{item.stock}</span></td><td><StatusBadge status={item.status} /></td><td><div className={styles.rowActions}><button type="button" className={styles.iconButton} onClick={() => onEdit(item)} aria-label={`Edit ${item.name}`}><Eye size={15} /></button><button type="button" className={styles.iconButton} onClick={() => onDelete(item)} aria-label={`Delete ${item.name}`}><X size={15} /></button></div></td></tr>)}</tbody></table>{products.length === 0 && <EmptyState title="No matching products" body="Adjust your search or filters, or add a product." />}</div><div className={styles.tableFooter}>Showing <strong>{products.length}</strong> products</div></section></>;
+function ProductSection({
+  allProducts,
+  products,
+  categories,
+  search,
+  onSearch,
+  category,
+  onCategory,
+  status,
+  onStatus,
+  stock,
+  onStock,
+  sort,
+  onSort,
+  onEdit,
+  onDelete
+}: {
+  allProducts: AdminProduct[];
+  products: AdminProduct[];
+  categories: AdminCategory[];
+  search: string;
+  onSearch: (value: string) => void;
+  category: string;
+  onCategory: (value: string) => void;
+  status: string;
+  onStatus: (value: string) => void;
+  stock: string;
+  onStock: (value: string) => void;
+  sort: string;
+  onSort: (value: string) => void;
+  onEdit: (product: AdminProduct) => void;
+  onDelete: (product: AdminProduct) => void;
+}) {
+  const lowStockCount = allProducts.filter((item) => item.stock > 0 && item.stock < 10).length;
+  const outOfStockCount = allProducts.filter((item) => item.stock === 0).length;
+  const publishedCount = allProducts.filter((item) => item.status === "Published").length;
+
+  return (
+    <>
+      <div className={styles.statStrip}>
+        <div
+          className={`${styles.statCardInteractive} ${stock === "All stock levels" && status === "All statuses" ? styles.statCardActive : ""}`}
+          onClick={() => {
+            onStock("All stock levels");
+            onStatus("All statuses");
+          }}
+          title="Click to view all products"
+        >
+          <span>All Products</span>
+          <strong>{allProducts.length}</strong>
+        </div>
+
+        <div
+          className={`${styles.statCardInteractive} ${status === "Published" && stock === "All stock levels" ? styles.statCardActive : ""}`}
+          onClick={() => {
+            onStatus(status === "Published" ? "All statuses" : "Published");
+            onStock("All stock levels");
+          }}
+          title="Click to filter by Published products"
+        >
+          <span>Published</span>
+          <strong>{publishedCount}</strong>
+        </div>
+
+        <div
+          className={`${styles.statCardInteractive} ${stock === "Low stock" ? styles.statCardActive : ""}`}
+          onClick={() => {
+            onStock(stock === "Low stock" ? "All stock levels" : "Low stock");
+          }}
+          title="Click to filter products with Low Stock (1-9 units)"
+        >
+          <span>
+            Low stock {stock === "Low stock" && <small style={{ color: "#b77126" }}>● Active</small>}
+          </span>
+          <strong className={styles.warningText}>{lowStockCount}</strong>
+        </div>
+
+        <div
+          className={`${styles.statCardInteractive} ${stock === "Out of stock" ? styles.statCardActive : ""}`}
+          onClick={() => {
+            onStock(stock === "Out of stock" ? "All stock levels" : "Out of stock");
+          }}
+          title="Click to filter Out of Stock products (0 units)"
+        >
+          <span>
+            Out of stock {stock === "Out of stock" && <small style={{ color: "#dc2626" }}>● Active</small>}
+          </span>
+          <strong className={outOfStockCount > 0 ? styles.dangerText : ""}>{outOfStockCount}</strong>
+        </div>
+      </div>
+
+      <section className={styles.panel}>
+        <div className={styles.tableToolbar}>
+          <div className={styles.tableSearch}>
+            <Search size={16} />
+            <input
+              value={search}
+              onChange={(event) => onSearch(event.target.value)}
+              placeholder="Search product, collection or SKU..."
+            />
+          </div>
+          <div className={styles.toolbarActions}>
+            <select
+              className={styles.filterSelect}
+              value={category}
+              onChange={(event) => onCategory(event.target.value)}
+            >
+              <option>All categories</option>
+              {categories.map((item) => (
+                <option key={item.slug}>{item.name}</option>
+              ))}
+            </select>
+            <select
+              className={styles.filterSelect}
+              value={stock}
+              onChange={(event) => onStock(event.target.value)}
+            >
+              <option>All stock levels</option>
+              <option>Low stock</option>
+              <option>Out of stock</option>
+              <option>In stock</option>
+            </select>
+            <select
+              className={styles.filterSelect}
+              value={status}
+              onChange={(event) => onStatus(event.target.value)}
+            >
+              <option>All statuses</option>
+              <option>Published</option>
+              <option>Draft</option>
+            </select>
+            <select
+              className={styles.filterSelect}
+              value={sort}
+              onChange={(event) => onSort(event.target.value)}
+            >
+              <option value="name">Name</option>
+              <option value="price-low">Price: low to high</option>
+              <option value="price-high">Price: high to low</option>
+              <option value="stock-low">Lowest stock</option>
+            </select>
+          </div>
+        </div>
+
+        {stock !== "All stock levels" && (
+          <div style={{
+            background: stock === "Out of stock" ? "#fef2f2" : "#fefce8",
+            border: `1px solid ${stock === "Out of stock" ? "#fecaca" : "#fef08a"}`,
+            borderRadius: "8px",
+            padding: "8px 14px",
+            marginBottom: "12px",
+            fontSize: "13px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            color: stock === "Out of stock" ? "#991b1b" : "#854d0e"
+          }}>
+            <span>
+              Showing <strong>{products.length}</strong> {stock.toLowerCase()} products
+            </span>
+            <button
+              type="button"
+              onClick={() => onStock("All stock levels")}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "inherit",
+                textDecoration: "underline",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: "12px"
+              }}
+            >
+              Reset filter ✕
+            </button>
+          </div>
+        )}
+
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>PRODUCT</th>
+                <th>CATEGORY</th>
+                <th>SKU</th>
+                <th>PRICE</th>
+                <th>STOCK</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((item, index) => (
+                <tr key={item.id}>
+                  <td>
+                    <div className={styles.productCell}>
+                      <span
+                        className={`${styles.productThumb} ${styles[`thumb${index % 4}`]}`}
+                        style={item.image ? { padding: 0, overflow: "hidden" } : undefined}
+                      >
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : (
+                          <Package size={17} />
+                        )}
+                      </span>
+                      <span>
+                        <strong>{item.name}</strong>
+                        <small className={styles.tableSub}>{item.slug}</small>
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div><strong>{item.category}</strong></div>
+                    {item.subcategory && (
+                      <small
+                        style={{
+                          color: "#806d89",
+                          fontSize: "11px",
+                          display: "inline-block",
+                          background: "#f5f0f7",
+                          padding: "1px 6px",
+                          borderRadius: "8px",
+                          marginTop: "2px"
+                        }}
+                      >
+                        {item.subcategory}
+                      </small>
+                    )}
+                  </td>
+                  <td className={styles.sku}>{item.sku}</td>
+                  <td><strong>{formatCurrency(item.price)}</strong></td>
+                  <td>
+                    <span
+                      className={`${styles.stockValue} ${
+                        item.stock === 0 ? styles.stockNone : item.stock < 10 ? styles.stockLow : ""
+                      }`}
+                    >
+                      <i />
+                      {item.stock === 0 ? "Out of stock (0)" : item.stock < 10 ? `Low: ${item.stock} left` : item.stock}
+                    </span>
+                  </td>
+                  <td><StatusBadge status={item.status} /></td>
+                  <td>
+                    <div className={styles.rowActions}>
+                      <button
+                        type="button"
+                        className={styles.iconButton}
+                        onClick={() => onEdit(item)}
+                        aria-label={`Edit ${item.name}`}
+                        title="Edit Product"
+                      >
+                        <Eye size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.iconButton}
+                        onClick={() => onDelete(item)}
+                        aria-label={`Delete ${item.name}`}
+                        title="Delete Product"
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {products.length === 0 && (
+            <EmptyState
+              title="No matching products"
+              body="Adjust your search or stock filters, or add a product."
+            />
+          )}
+        </div>
+        <div className={styles.tableFooter}>
+          Showing <strong>{products.length}</strong> of <strong>{allProducts.length}</strong> products
+        </div>
+      </section>
+    </>
+  );
 }
 
-function InventorySection({ products, categories, search, onSearch, category, onCategory, stock, onStock, sort, onSort, advanced, onAdjust }: { products: AdminProduct[]; categories: AdminCategory[]; search: string; onSearch: (value: string) => void; category: string; onCategory: (value: string) => void; stock: string; onStock: (value: string) => void; sort: string; onSort: (value: string) => void; advanced: boolean; onAdjust: (id: string, amount: number) => void }) {
-  const units = products.reduce((sum, product) => sum + product.stock, 0);
-  return <><div className={styles.statStrip}><div><span>Product lines</span><strong>{products.length}</strong></div><div><span>Units in stock</span><strong>{units}</strong></div><div><span>Low stock</span><strong className={styles.warningText}>{products.filter((item) => item.stock > 0 && item.stock < 10).length}</strong></div><div><span>Out of stock</span><strong>{products.filter((item) => item.stock === 0).length}</strong></div></div><section className={styles.panel}><div className={styles.tableToolbar}><div className={styles.tableSearch}><Search size={16} /><input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search by product or SKU..." /></div><div className={styles.toolbarActions}><select className={styles.filterSelect} value={stock} onChange={(event) => onStock(event.target.value)}><option>All stock levels</option><option>Low stock</option><option>Out of stock</option><option>In stock</option></select><button type="button" className={styles.secondaryButton} onClick={() => exportProducts(products)}><Download size={15} /> Export</button></div></div>{advanced && <div className={styles.advancedFilters}><div><span className={styles.eyebrow}>FILTER INVENTORY</span><p>Refine by collection and stock availability.</p></div><label>Collection<select className={styles.filterSelect} value={category} onChange={(event) => onCategory(event.target.value)}><option>All categories</option>{categories.map((item) => <option key={item.slug}>{item.name}</option>)}</select></label><label>Sort by<select className={styles.filterSelect} value={sort} onChange={(event) => onSort(event.target.value)}><option value="stock-low">Lowest stock first</option><option value="name">Product name</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label><button type="button" className={styles.clearFilters} onClick={() => { onCategory("All categories"); onStock("All stock levels"); onSort("stock-low"); onSearch(""); }}>Clear filters</button></div>}<div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>PRODUCT</th><th>CATEGORY</th><th>SKU</th><th>PRICE</th><th>AVAILABLE</th><th>ADJUST STOCK</th></tr></thead><tbody>{products.map((product) => <tr key={product.id}><td><div className={styles.productCell}><span className={styles.productThumb}><Package size={17} /></span><span><strong>{product.name}</strong><small className={styles.tableSub}>{product.status}</small></span></div></td><td>{product.category}</td><td className={styles.sku}>{product.sku}</td><td>{formatCurrency(product.price)}</td><td><span className={`${styles.stockValue} ${product.stock < 10 ? styles.stockLow : ""}`}><i />{product.stock} units</span></td><td><div className={styles.stockAdjust}><button type="button" onClick={() => onAdjust(product.id, -1)} aria-label={`Remove one ${product.name}`} disabled={product.stock === 0}>−</button><strong>{product.stock}</strong><button type="button" onClick={() => onAdjust(product.id, 1)} aria-label={`Add one ${product.name}`}>+</button></div></td></tr>)}</tbody></table>{products.length === 0 && <EmptyState title="No matching products" body="Change your filters to see inventory." />}</div></section></>;
+function InventorySection({
+  allProducts,
+  products,
+  categories,
+  search,
+  onSearch,
+  category,
+  onCategory,
+  stock,
+  onStock,
+  sort,
+  onSort,
+  advanced,
+  onAdjust
+}: {
+  allProducts: AdminProduct[];
+  products: AdminProduct[];
+  categories: AdminCategory[];
+  search: string;
+  onSearch: (value: string) => void;
+  category: string;
+  onCategory: (value: string) => void;
+  stock: string;
+  onStock: (value: string) => void;
+  sort: string;
+  onSort: (value: string) => void;
+  advanced: boolean;
+  onAdjust: (id: string, amount: number) => void;
+}) {
+  const units = allProducts.reduce((sum, product) => sum + product.stock, 0);
+  const lowStockCount = allProducts.filter((item) => item.stock > 0 && item.stock < 10).length;
+  const outOfStockCount = allProducts.filter((item) => item.stock === 0).length;
+
+  return (
+    <>
+      <div className={styles.statStrip}>
+        <div
+          className={`${styles.statCardInteractive} ${stock === "All stock levels" ? styles.statCardActive : ""}`}
+          onClick={() => onStock("All stock levels")}
+          title="Click to view all inventory lines"
+        >
+          <span>Product lines</span>
+          <strong>{allProducts.length}</strong>
+        </div>
+
+        <div>
+          <span>Units in stock</span>
+          <strong>{units}</strong>
+        </div>
+
+        <div
+          className={`${styles.statCardInteractive} ${stock === "Low stock" ? styles.statCardActive : ""}`}
+          onClick={() => onStock(stock === "Low stock" ? "All stock levels" : "Low stock")}
+          title="Click to view items with Low Stock (< 10 units)"
+        >
+          <span>
+            Low stock {stock === "Low stock" && <small style={{ color: "#b77126" }}>● Active</small>}
+          </span>
+          <strong className={styles.warningText}>{lowStockCount}</strong>
+        </div>
+
+        <div
+          className={`${styles.statCardInteractive} ${stock === "Out of stock" ? styles.statCardActive : ""}`}
+          onClick={() => onStock(stock === "Out of stock" ? "All stock levels" : "Out of stock")}
+          title="Click to view Out of Stock items (0 units)"
+        >
+          <span>
+            Out of stock {stock === "Out of stock" && <small style={{ color: "#dc2626" }}>● Active</small>}
+          </span>
+          <strong className={outOfStockCount > 0 ? styles.dangerText : ""}>{outOfStockCount}</strong>
+        </div>
+      </div>
+
+      <section className={styles.panel}>
+        <div className={styles.tableToolbar}>
+          <div className={styles.tableSearch}>
+            <Search size={16} />
+            <input
+              value={search}
+              onChange={(event) => onSearch(event.target.value)}
+              placeholder="Search by product or SKU..."
+            />
+          </div>
+          <div className={styles.toolbarActions}>
+            <select
+              className={styles.filterSelect}
+              value={stock}
+              onChange={(event) => onStock(event.target.value)}
+            >
+              <option>All stock levels</option>
+              <option>Low stock</option>
+              <option>Out of stock</option>
+              <option>In stock</option>
+            </select>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => exportProducts(products)}
+            >
+              <Download size={15} /> Export
+            </button>
+          </div>
+        </div>
+
+        {stock !== "All stock levels" && (
+          <div style={{
+            background: stock === "Out of stock" ? "#fef2f2" : "#fefce8",
+            border: `1px solid ${stock === "Out of stock" ? "#fecaca" : "#fef08a"}`,
+            borderRadius: "8px",
+            padding: "8px 14px",
+            marginBottom: "12px",
+            fontSize: "13px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            color: stock === "Out of stock" ? "#991b1b" : "#854d0e"
+          }}>
+            <span>
+              Showing <strong>{products.length}</strong> {stock.toLowerCase()} items
+            </span>
+            <button
+              type="button"
+              onClick={() => onStock("All stock levels")}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "inherit",
+                textDecoration: "underline",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: "12px"
+              }}
+            >
+              Reset filter ✕
+            </button>
+          </div>
+        )}
+
+        {advanced && (
+          <div className={styles.advancedFilters}>
+            <div>
+              <span className={styles.eyebrow}>FILTER INVENTORY</span>
+              <p>Refine by collection and stock availability.</p>
+            </div>
+            <label>
+              Collection
+              <select
+                className={styles.filterSelect}
+                value={category}
+                onChange={(event) => onCategory(event.target.value)}
+              >
+                <option>All categories</option>
+                {categories.map((item) => (
+                  <option key={item.slug}>{item.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Sort by
+              <select
+                className={styles.filterSelect}
+                value={sort}
+                onChange={(event) => onSort(event.target.value)}
+              >
+                <option value="stock-low">Lowest stock first</option>
+                <option value="name">Product name</option>
+                <option value="price-low">Price: low to high</option>
+                <option value="price-high">Price: high to low</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              className={styles.clearFilters}
+              onClick={() => {
+                onCategory("All categories");
+                onStock("All stock levels");
+                onSort("stock-low");
+                onSearch("");
+              }}
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>PRODUCT</th>
+                <th>CATEGORY</th>
+                <th>SKU</th>
+                <th>PRICE</th>
+                <th>AVAILABLE</th>
+                <th>ADJUST STOCK</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => (
+                <tr key={product.id}>
+                  <td>
+                    <div className={styles.productCell}>
+                      <span className={styles.productThumb}>
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "6px" }}
+                          />
+                        ) : (
+                          <Package size={17} />
+                        )}
+                      </span>
+                      <span>
+                        <strong>{product.name}</strong>
+                        <small className={styles.tableSub}>{product.status}</small>
+                      </span>
+                    </div>
+                  </td>
+                  <td>{product.category}</td>
+                  <td className={styles.sku}>{product.sku}</td>
+                  <td>{formatCurrency(product.price)}</td>
+                  <td>
+                    <span
+                      className={`${styles.stockValue} ${
+                        product.stock === 0 ? styles.stockNone : product.stock < 10 ? styles.stockLow : ""
+                      }`}
+                    >
+                      <i />
+                      {product.stock === 0 ? "Out of stock" : `${product.stock} units`}
+                    </span>
+                  </td>
+                  <td>
+                    <div className={styles.stockAdjust}>
+                      <button
+                        type="button"
+                        onClick={() => onAdjust(product.id, -1)}
+                        aria-label={`Remove one ${product.name}`}
+                        disabled={product.stock === 0}
+                      >
+                        −
+                      </button>
+                      <strong>{product.stock}</strong>
+                      <button
+                        type="button"
+                        onClick={() => onAdjust(product.id, 1)}
+                        aria-label={`Add one ${product.name}`}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {products.length === 0 && (
+            <EmptyState
+              title="No matching products"
+              body="Change your filters to see inventory."
+            />
+          )}
+        </div>
+      </section>
+    </>
+  );
 }
 
 function OrdersSection({ orders, isPreview, search, onSearch, status, onStatusFilter, onStatus, onExport, onSelectOrder }: { orders: AdminOrder[]; isPreview: boolean; search: string; onSearch: (value: string) => void; status: string; onStatusFilter: (value: string) => void; onStatus: (id: string, status: AdminOrder["status"]) => void; onExport: () => void; onSelectOrder: (order: AdminOrder) => void }) {
