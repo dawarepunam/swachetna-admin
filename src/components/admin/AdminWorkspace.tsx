@@ -10,11 +10,84 @@ import styles from "./Admin.module.css";
 
 type Section = "dashboard" | "products" | "inventory" | "orders" | "inquiries" | "coupons" | "reviews" | "customers" | "categories" | "reports" | "content" | "campaigns" | "settings";
 const samplePreviewOrders: AdminOrder[] = [
-  { id: "SAMPLE-1048", customer: "Aarohi Deshmukh", total: 2450, createdAt: "2026-10-16T10:30:00.000Z", status: "Processing", paymentMethod: "UPI" },
-  { id: "SAMPLE-1047", customer: "Kabir Patil", total: 1890, createdAt: "2026-09-22T09:10:00.000Z", status: "Delivered", paymentMethod: "Card" },
-  { id: "SAMPLE-1046", customer: "Meera Joshi", total: 3250, createdAt: "2026-08-14T12:45:00.000Z", status: "Shipped", paymentMethod: "UPI" },
-  { id: "SAMPLE-1045", customer: "Ishan Kulkarni", total: 1460, createdAt: "2026-07-08T08:15:00.000Z", status: "Delivered", paymentMethod: "Cash on delivery" },
-  { id: "SAMPLE-1044", customer: "Sana Shaikh", total: 2780, createdAt: "2026-06-19T11:20:00.000Z", status: "Delivered", paymentMethod: "Card" },
+  {
+    id: "SW-ORD-8821",
+    customer: "Punam Rajendra Daware",
+    customerEmail: "dawarepunam82@gmail.com",
+    customerPhone: "+91 88560 17832",
+    customerAddress: "Flat 402, Shivajinagar, Pune, Maharashtra 411005",
+    total: 2450,
+    createdAt: "2026-11-01T10:30:00.000Z",
+    status: "Processing",
+    paymentMethod: "UPI",
+    items: [
+      { id: "it-1", name: "Gaon-style Homemade Traditional Pickle (500g)", price: 380, quantity: 2, sku: "SW-FD-010" },
+      { id: "it-2", name: "Organic Dink & Dryfruit Energy Laddu (1kg)", price: 650, quantity: 2, sku: "SW-FD-011" },
+      { id: "it-3", name: "Hand-finished Terracotta Vase", price: 390, quantity: 1, sku: "SW-HL-001" },
+    ]
+  },
+  {
+    id: "SW-ORD-8819",
+    customer: "Aarohi Deshmukh",
+    customerEmail: "aarohi.deshmukh@gmail.com",
+    customerPhone: "+91 98220 44551",
+    customerAddress: "Plot 12, Baner Road, Pune, Maharashtra 411045",
+    total: 1890,
+    createdAt: "2026-10-28T14:15:00.000Z",
+    status: "Delivered",
+    paymentMethod: "UPI",
+    items: [
+      { id: "it-4", name: "Sun-Dried Crisp Urad Dal Papad (500g)", price: 250, quantity: 3, sku: "SW-FD-015" },
+      { id: "it-5", name: "Stone-Ground Authentic Goda Masala", price: 320, quantity: 2, sku: "SW-FD-018" },
+      { id: "it-6", name: "Natural Handmade Jute Tote Bag", price: 500, quantity: 1, sku: "SW-CL-014" },
+    ]
+  },
+  {
+    id: "SW-ORD-8814",
+    customer: "Meera Joshi",
+    customerEmail: "meera.joshi@outlook.com",
+    customerPhone: "+91 97654 11223",
+    customerAddress: "Kothrud, Pune, Maharashtra 411038",
+    total: 3250,
+    createdAt: "2026-10-25T11:45:00.000Z",
+    status: "Shipped",
+    paymentMethod: "Cash on delivery",
+    items: [
+      { id: "it-7", name: "The Thoughtful Artisan Festive Hamper", price: 2250, quantity: 1, sku: "SW-GF-012" },
+      { id: "it-8", name: "Traditional Brass Carved Diya Stand", price: 1000, quantity: 1, sku: "SW-HL-009" },
+    ]
+  },
+  {
+    id: "SW-ORD-8809",
+    customer: "Kabir Patil",
+    customerEmail: "kabir.patil@yahoo.com",
+    customerPhone: "+91 99231 77665",
+    customerAddress: "Dharampeth, Nagpur, Maharashtra 440010",
+    total: 1460,
+    createdAt: "2026-10-20T09:20:00.000Z",
+    status: "Pending",
+    paymentMethod: "UPI",
+    items: [
+      { id: "it-9", name: "Activated Charcoal Soap (Pack of 4)", price: 460, quantity: 1, sku: "SW-710372" },
+      { id: "it-10", name: "Classic Scented Candle Gift Set", price: 1000, quantity: 1, sku: "SW-118718" },
+    ]
+  },
+  {
+    id: "SW-ORD-8802",
+    customer: "Sana Shaikh",
+    customerEmail: "sana.shaikh@gmail.com",
+    customerPhone: "+91 98811 33221",
+    customerAddress: "Viman Nagar, Pune, Maharashtra 411014",
+    total: 2780,
+    createdAt: "2026-10-15T16:40:00.000Z",
+    status: "Delivered",
+    paymentMethod: "Card",
+    items: [
+      { id: "it-11", name: "Organic Khadi Cotton Table Linen", price: 1099, quantity: 1, sku: "SW-HL-005" },
+      { id: "it-12", name: "Artisan Mini Gift Box - A Little Thank You", price: 599, quantity: 2, sku: "SW-GF-006" },
+      { id: "it-13", name: "Aloe Vera Handmade Herbal Soap", price: 482, quantity: 1, sku: "SW-495994" },
+    ]
+  }
 ];
 const titles: Record<Section, { eyebrow: string; title: string; description: string }> = {
   dashboard: { eyebrow: "WORKSPACE OVERVIEW", title: "Your foundation at a glance", description: "A current view of the products and orders saved in this browser." },
@@ -926,8 +999,247 @@ function InventorySection({
   );
 }
 
-function OrdersSection({ orders, isPreview, search, onSearch, status, onStatusFilter, onStatus, onExport, onSelectOrder }: { orders: AdminOrder[]; isPreview: boolean; search: string; onSearch: (value: string) => void; status: string; onStatusFilter: (value: string) => void; onStatus: (id: string, status: AdminOrder["status"]) => void; onExport: () => void; onSelectOrder: (order: AdminOrder) => void }) {
-  return <><div className={styles.statStrip}><div><span>{isPreview ? "Sample orders" : "Orders on this browser"}</span><strong>{orders.length}</strong></div><div><span>Pending</span><strong>{orders.filter((item) => item.status === "Pending").length}</strong></div><div><span>Processing</span><strong>{orders.filter((item) => item.status === "Processing").length}</strong></div><div><span>Delivered</span><strong>{orders.filter((item) => item.status === "Delivered").length}</strong></div></div><section className={styles.panel}><div className={styles.tableToolbar}><div className={styles.tableSearch}><Search size={16} /><input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search order reference or customer..." /></div><div className={styles.toolbarActions}><select className={styles.filterSelect} value={status} onChange={(event) => onStatusFilter(event.target.value)}><option>All statuses</option><option>Pending</option><option>Processing</option><option>Shipped</option><option>Delivered</option></select><button type="button" className={styles.secondaryButton} onClick={onExport}><Download size={15} /> {isPreview ? "Export sample" : "Export"}</button></div></div><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>DATE</th><th>PAYMENT</th><th>STATUS</th><th className={styles.alignRight}>TOTAL</th><th>ACTIONS</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><button type="button" onClick={() => onSelectOrder(order)} style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}><strong className={styles.orderId} style={{ color: "#7652c8", textDecoration: "underline" }}>{order.id}</strong></button></td><td><span className={styles.customerName}>{order.customer}</span></td><td>{formatDate(order.createdAt)}</td><td>{order.paymentMethod || "Not recorded"}</td><td><select className={`${styles.statusSelect} ${styles[`status${order.status}`]}`} value={order.status} onChange={(event) => onStatus(order.id, event.target.value as AdminOrder["status"])} aria-label={`Status for ${order.id}`}><option>Pending</option><option>Processing</option><option>Shipped</option><option>Delivered</option></select></td><td className={styles.alignRight}><strong>{formatCurrency(order.total)}</strong></td><td><button type="button" className={styles.iconButton} onClick={() => onSelectOrder(order)} title="View order invoice & details"><Eye size={15} /></button></td></tr>)}</tbody></table>{orders.length === 0 && <EmptyState title="No matching orders" body="Change the search or status filter to see orders." />}</div></section></>;
+function OrdersSection({
+  orders,
+  isPreview,
+  search,
+  onSearch,
+  status,
+  onStatusFilter,
+  onStatus,
+  onExport,
+  onSelectOrder,
+}: {
+  orders: AdminOrder[];
+  isPreview: boolean;
+  search: string;
+  onSearch: (value: string) => void;
+  status: string;
+  onStatusFilter: (value: string) => void;
+  onStatus: (id: string, status: AdminOrder["status"]) => void;
+  onExport: () => void;
+  onSelectOrder: (order: AdminOrder) => void;
+}) {
+  const pendingCount = orders.filter((o) => o.status === "Pending").length;
+  const processingCount = orders.filter((o) => o.status === "Processing").length;
+  const shippedCount = orders.filter((o) => o.status === "Shipped").length;
+  const deliveredCount = orders.filter((o) => o.status === "Delivered").length;
+
+  return (
+    <>
+      {/* Interactive Metric Filter Cards */}
+      <div className={styles.statStrip}>
+        <div
+          className={`${styles.statCardInteractive} ${status === "All statuses" ? styles.statCardActive : ""}`}
+          onClick={() => onStatusFilter("All statuses")}
+          title="Click to view all orders"
+        >
+          <span>Total Orders</span>
+          <strong>{orders.length}</strong>
+        </div>
+
+        <div
+          className={`${styles.statCardInteractive} ${status === "Pending" ? styles.statCardActive : ""}`}
+          onClick={() => onStatusFilter(status === "Pending" ? "All statuses" : "Pending")}
+          title="Click to filter Pending orders"
+        >
+          <span>Pending {status === "Pending" && <small style={{ color: "#d97706" }}>● Active</small>}</span>
+          <strong style={{ color: "#d97706" }}>{pendingCount}</strong>
+        </div>
+
+        <div
+          className={`${styles.statCardInteractive} ${status === "Processing" ? styles.statCardActive : ""}`}
+          onClick={() => onStatusFilter(status === "Processing" ? "All statuses" : "Processing")}
+          title="Click to filter Processing / Packing orders"
+        >
+          <span>Processing {status === "Processing" && <small style={{ color: "#7451ba" }}>● Active</small>}</span>
+          <strong style={{ color: "#7451ba" }}>{processingCount}</strong>
+        </div>
+
+        <div
+          className={`${styles.statCardInteractive} ${status === "Shipped" ? styles.statCardActive : ""}`}
+          onClick={() => onStatusFilter(status === "Shipped" ? "All statuses" : "Shipped")}
+          title="Click to filter Shipped orders"
+        >
+          <span>Shipped {status === "Shipped" && <small style={{ color: "#2563eb" }}>● Active</small>}</span>
+          <strong style={{ color: "#2563eb" }}>{shippedCount}</strong>
+        </div>
+
+        <div
+          className={`${styles.statCardInteractive} ${status === "Delivered" ? styles.statCardActive : ""}`}
+          onClick={() => onStatusFilter(status === "Delivered" ? "All statuses" : "Delivered")}
+          title="Click to filter Delivered orders"
+        >
+          <span>Delivered {status === "Delivered" && <small style={{ color: "#166534" }}>● Active</small>}</span>
+          <strong style={{ color: "#166534" }}>{deliveredCount}</strong>
+        </div>
+      </div>
+
+      <section className={styles.panel}>
+        <div className={styles.tableToolbar}>
+          <div className={styles.tableSearch}>
+            <Search size={16} />
+            <input
+              value={search}
+              onChange={(event) => onSearch(event.target.value)}
+              placeholder="Search by order ID, customer name, phone, or address..."
+            />
+          </div>
+          <div className={styles.toolbarActions}>
+            <select
+              className={styles.filterSelect}
+              value={status}
+              onChange={(event) => onStatusFilter(event.target.value)}
+            >
+              <option>All statuses</option>
+              <option>Pending</option>
+              <option>Processing</option>
+              <option>Shipped</option>
+              <option>Delivered</option>
+            </select>
+            {status !== "All statuses" && (
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => onStatusFilter("All statuses")}
+                style={{ fontSize: "12px", padding: "6px 10px" }}
+              >
+                Clear ✕
+              </button>
+            )}
+            <button type="button" className={styles.secondaryButton} onClick={onExport}>
+              <Download size={15} /> Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ORDER</th>
+                <th>CUSTOMER &amp; DELIVERY</th>
+                <th>ORDERED ITEMS</th>
+                <th>DATE</th>
+                <th>PAYMENT</th>
+                <th>DISPATCH STATUS</th>
+                <th className={styles.alignRight}>TOTAL</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => {
+                const itemsCount = Array.isArray(order.items)
+                  ? order.items.reduce((acc, it) => acc + (it.quantity || 1), 0)
+                  : 1;
+
+                return (
+                  <tr
+                    key={order.id}
+                    onClick={(e) => {
+                      const tag = (e.target as HTMLElement).tagName.toLowerCase();
+                      if (tag !== "select" && tag !== "option" && tag !== "button" && tag !== "a") {
+                        onSelectOrder(order);
+                      }
+                    }}
+                    style={{ cursor: "pointer" }}
+                    title="Click row to view full order invoice & customer address"
+                  >
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => onSelectOrder(order)}
+                        style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
+                      >
+                        <strong className={styles.orderId} style={{ color: "#59368d", textDecoration: "underline", fontSize: "13.5px" }}>
+                          {order.id}
+                        </strong>
+                      </button>
+                    </td>
+                    <td>
+                      <span className={styles.customerName}>{order.customer}</span>
+                      {order.customerPhone && (
+                        <div style={{ fontSize: "11px", color: "#8a7e93", marginTop: "1px" }}>
+                          📞 {order.customerPhone}
+                        </div>
+                      )}
+                      {order.customerAddress && (
+                        <small className={styles.tableSub} style={{ maxWidth: "220px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+                          📍 {order.customerAddress}
+                        </small>
+                      )}
+                    </td>
+                    <td>
+                      <div style={{ fontSize: "12.5px", color: "#372744", fontWeight: "600" }}>
+                        {itemsCount} {itemsCount === 1 ? "Item" : "Items"}
+                      </div>
+                      {Array.isArray(order.items) && order.items.length > 0 && (
+                        <div style={{ fontSize: "11px", color: "#746982", maxWidth: "200px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {order.items.map((it) => it.name).join(", ")}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ fontSize: "12px", color: "#6a5f78", whiteSpace: "nowrap" }}>
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td>
+                      <span
+                        style={{
+                          fontSize: "11.5px",
+                          fontWeight: "700",
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                          background: order.paymentMethod?.toLowerCase().includes("cash") ? "#fef3c7" : "#eef8f2",
+                          color: order.paymentMethod?.toLowerCase().includes("cash") ? "#92400e" : "#166534",
+                        }}
+                      >
+                        {order.paymentMethod || "UPI"}
+                      </span>
+                    </td>
+                    <td>
+                      <select
+                        className={`${styles.statusSelect} ${styles[`status${order.status}`]}`}
+                        value={order.status}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(event) => onStatus(order.id, event.target.value as AdminOrder["status"])}
+                        aria-label={`Status for ${order.id}`}
+                        style={{ fontWeight: "700" }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                      </select>
+                    </td>
+                    <td className={styles.alignRight}>
+                      <strong style={{ fontSize: "14px", color: "#166534" }}>{formatCurrency(order.total)}</strong>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className={styles.secondaryButton}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectOrder(order);
+                        }}
+                        title="View order invoice & details"
+                        style={{ fontSize: "11.5px", padding: "5px 10px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                      >
+                        <Eye size={13} /> Invoice
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {orders.length === 0 && (
+            <EmptyState title="No matching orders" body="Change the search or status filter to see orders." />
+          )}
+        </div>
+      </section>
+    </>
+  );
 }
 function CustomersSection({ orders, isPreview, search, onSearch }: { orders: AdminOrder[]; isPreview: boolean; search: string; onSearch: (value: string) => void }) {
   const rows = useMemo(() => {
