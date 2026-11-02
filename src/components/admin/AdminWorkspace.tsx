@@ -2528,6 +2528,13 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
   }, [products, defaultSampleReviews]);
 
   const [filterRating, setFilterRating] = useState("all");
+  const [selectedProductReviewModal, setSelectedProductReviewModal] = useState<{
+    slug: string;
+    name: string;
+    image?: string;
+    price?: number;
+    reviews: Array<{ review: any }>;
+  } | null>(null);
 
   const handleDeleteReview = async (productSlug: string, reviewId: string) => {
     const updated = products.map((p) => {
@@ -2636,7 +2643,18 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
                       <div className={styles.productCell}>
                         <span
                           className={`${styles.productThumb} ${styles[`thumb${idx % 4}`]}`}
-                          style={displayImage ? { padding: 0, overflow: "hidden", border: "1px solid #ebdff2", borderRadius: "8px" } : undefined}
+                          style={displayImage ? { padding: 0, overflow: "hidden", border: "1px solid #ebdff2", borderRadius: "8px", cursor: "pointer" } : { cursor: "pointer" }}
+                          onClick={() => {
+                            const productReviews = allReviewsWithProduct.filter((r) => r.productSlug === productSlug);
+                            setSelectedProductReviewModal({
+                              slug: productSlug,
+                              name: productName,
+                              image: displayImage,
+                              price: matchedProd?.price,
+                              reviews: productReviews,
+                            });
+                          }}
+                          title="Click to view product reviews & details"
                         >
                           {displayImage ? (
                             <img
@@ -2649,18 +2667,32 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
                           )}
                         </span>
                         <span>
-                          <Link
-                            href={`/products/${productSlug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ textDecoration: "none" }}
-                            title="Open product in store"
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const productReviews = allReviewsWithProduct.filter((r) => r.productSlug === productSlug);
+                              setSelectedProductReviewModal({
+                                slug: productSlug,
+                                name: productName,
+                                image: displayImage,
+                                price: matchedProd?.price,
+                                reviews: productReviews,
+                              });
+                            }}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              padding: 0,
+                              cursor: "pointer",
+                              textAlign: "left",
+                            }}
+                            title="Click to view product reviews & details in Admin"
                           >
-                            <strong style={{ fontSize: "13.5px", color: "#3a2d42", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            <strong style={{ fontSize: "13.5px", color: "#5b359c", display: "inline-flex", alignItems: "center", gap: "5px", textDecoration: "underline", textUnderlineOffset: "3px" }}>
                               {productName}
-                              <ExternalLink size={12} color="#8a7e93" />
+                              <Eye size={13} color="#7451ba" />
                             </strong>
-                          </Link>
+                          </button>
                           <small className={styles.tableSub}>{productSlug}</small>
                         </span>
                       </div>
@@ -2709,6 +2741,218 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
           )}
         </div>
       </section>
+
+      {/* Admin In-Workspace Product Reviews Modal */}
+      {selectedProductReviewModal && (
+        <div
+          className={styles.modalScrim}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setSelectedProductReviewModal(null);
+          }}
+        >
+          <section
+            className={`${styles.modal} ${styles.orderModal}`}
+            role="dialog"
+            aria-modal="true"
+            style={{ maxWidth: "680px", maxHeight: "90vh", overflowY: "auto" }}
+          >
+            <div className={styles.modalHead}>
+              <div>
+                <span className={styles.eyebrow}>PRODUCT FEEDBACK & RATINGS</span>
+                <h2 style={{ fontSize: "19px", color: "#2d2038", marginTop: "2px" }}>
+                  {selectedProductReviewModal.name}
+                </h2>
+                <p style={{ fontSize: "12.5px", color: "#746982" }}>
+                  Customer ratings, feedback & reviews specifically for this product.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.iconButton}
+                onClick={() => setSelectedProductReviewModal(null)}
+                aria-label="Close modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Product Summary Header inside Modal */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                padding: "16px",
+                background: "#f9f7fc",
+                borderRadius: "12px",
+                margin: "16px 0 20px",
+                border: "1px solid #ede8f4",
+              }}
+            >
+              <div
+                style={{
+                  width: "68px",
+                  height: "68px",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  border: "1px solid #ded3e8",
+                  flexShrink: 0,
+                  background: "#fff",
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                {selectedProductReviewModal.image ? (
+                  <img
+                    src={selectedProductReviewModal.image}
+                    alt={selectedProductReviewModal.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <Package size={26} color="#7451ba" />
+                )}
+              </div>
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: "15px", color: "#2a1c38", display: "block" }}>
+                  {selectedProductReviewModal.name}
+                </strong>
+                <div style={{ fontSize: "12px", color: "#8a7e93", marginTop: "2px" }}>
+                  Slug: <code style={{ background: "#ede8f4", padding: "1px 5px", borderRadius: "4px" }}>{selectedProductReviewModal.slug}</code>
+                  {selectedProductReviewModal.price && (
+                    <span style={{ marginLeft: "10px", color: "#166534", fontWeight: "700" }}>
+                      ₹{selectedProductReviewModal.price}
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
+                  <div style={{ color: "#f59e0b", display: "flex", fontSize: "14px" }}>
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const avgRating = selectedProductReviewModal.reviews.length
+                        ? selectedProductReviewModal.reviews.reduce((acc, curr) => acc + curr.review.rating, 0) / selectedProductReviewModal.reviews.length
+                        : 5;
+                      return <span key={i} style={{ opacity: i < Math.round(avgRating) ? 1 : 0.25 }}>★</span>;
+                    })}
+                  </div>
+                  <span style={{ fontSize: "12px", fontWeight: "700", color: "#44354c" }}>
+                    {selectedProductReviewModal.reviews.length} {selectedProductReviewModal.reviews.length === 1 ? "Review" : "Reviews"}
+                  </span>
+                </div>
+              </div>
+
+              <Link
+                href={`/products/${selectedProductReviewModal.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.secondaryButton}
+                style={{ fontSize: "12px", padding: "6px 12px", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                title="View live product on storefront"
+              >
+                Storefront <ExternalLink size={12} />
+              </Link>
+            </div>
+
+            {/* Individual Reviews List for this Product */}
+            <div>
+              <h3 style={{ fontSize: "13.5px", textTransform: "uppercase", letterSpacing: "0.5px", color: "#746982", marginBottom: "12px" }}>
+                Customer Feedback &amp; Comments ({selectedProductReviewModal.reviews.length})
+              </h3>
+
+              {selectedProductReviewModal.reviews.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "30px 10px", color: "#8a7e93", fontSize: "13px" }}>
+                  No customer reviews have been submitted for this product yet.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {selectedProductReviewModal.reviews.map(({ review }, revIdx) => (
+                    <div
+                      key={review.id || revIdx}
+                      style={{
+                        padding: "14px 16px",
+                        background: "#ffffff",
+                        border: "1px solid #ebdff2",
+                        borderRadius: "10px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <strong style={{ fontSize: "13.5px", color: "#2d2038" }}>
+                            {review.author}
+                          </strong>
+                          {review.verified && (
+                            <span
+                              style={{
+                                marginLeft: "8px",
+                                fontSize: "10.5px",
+                                color: "#166534",
+                                background: "#f0fdf4",
+                                border: "1px solid #bbf7d0",
+                                padding: "1px 6px",
+                                borderRadius: "99px",
+                                fontWeight: "600",
+                              }}
+                            >
+                              ✓ Verified Buyer
+                            </span>
+                          )}
+                          <div style={{ fontSize: "11px", color: "#9589a0", marginTop: "2px" }}>
+                            {review.date || "Recent"}
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div style={{ color: "#f59e0b", display: "flex", gap: "1px", fontSize: "14px" }}>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <span key={i} style={{ opacity: i < review.rating ? 1 : 0.25 }}>★</span>
+                            ))}
+                          </div>
+
+                          <button
+                            type="button"
+                            className={styles.iconButton}
+                            onClick={async () => {
+                              await handleDeleteReview(selectedProductReviewModal.slug, review.id);
+                              // update modal state
+                              setSelectedProductReviewModal((prev) => {
+                                if (!prev) return null;
+                                return {
+                                  ...prev,
+                                  reviews: prev.reviews.filter((r) => r.review.id !== review.id),
+                                };
+                              });
+                            }}
+                            title="Delete this review"
+                            style={{ width: "30px", height: "30px", color: "#b91c1c", background: "#fef2f2", border: "1px solid #fee2e2" }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#473a52", lineHeight: 1.55 }}>
+                        &ldquo;{review.comment}&rdquo;
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalActions} style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setSelectedProductReviewModal(null)}
+              >
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </>
   );
 }
