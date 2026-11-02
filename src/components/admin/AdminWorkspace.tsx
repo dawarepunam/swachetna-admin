@@ -2473,6 +2473,7 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
     {
       productSlug: "traditional-mango-pickle",
       productName: "Gaon-style Homemade Traditional Pickle",
+      productImage: "/images/collections/food-ngo/traditional-pickles/mango/mango-pickle-jar-authentic.jpg",
       review: {
         id: "rev-sample-1",
         author: "Meera Joshi",
@@ -2485,6 +2486,7 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
     {
       productSlug: "nutritious-dryfruit-ding-laddu",
       productName: "Organic Dink & Dryfruit Energy Laddu",
+      productImage: "/images/collections/food-ngo/dryfruit-laddus/mixed-fruits/dryfruit-laddus-plate.jpg",
       review: {
         id: "rev-sample-2",
         author: "Anand Shinde",
@@ -2495,8 +2497,9 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
       }
     },
     {
-      productSlug: "terracotta-vase-pottery",
+      productSlug: "earth-toned-handcrafted-piece",
       productName: "Terracotta Vase Pottery",
+      productImage: "/uploads/matte-ochre-vase-1793443956049-e5agp.jpg",
       review: {
         id: "rev-sample-3",
         author: "Radhika Sharma",
@@ -2509,11 +2512,11 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
   ], []);
 
   const allReviewsWithProduct = useMemo(() => {
-    const list: Array<{ productSlug: string; productName: string; review: any }> = [];
+    const list: Array<{ productSlug: string; productName: string; productImage?: string; review: any }> = [];
     products.forEach((p) => {
       if (Array.isArray(p.reviews) && p.reviews.length > 0) {
         p.reviews.forEach((r) => {
-          list.push({ productSlug: p.slug, productName: p.name, review: r });
+          list.push({ productSlug: p.slug, productName: p.name, productImage: p.image, review: r });
         });
       }
     });
@@ -2622,45 +2625,83 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
               </tr>
             </thead>
             <tbody>
-              {filtered.map(({ productSlug, productName, review }) => (
-                <tr key={review.id || `${productSlug}-${review.author}`}>
-                  <td>
-                    <strong style={{ fontSize: "13px", color: "#3a2d42", display: "block" }}>{productName}</strong>
-                    <div style={{ fontSize: "11px", color: "#8a7e93" }}>{productSlug}</div>
-                  </td>
-                  <td>
-                    <strong style={{ fontSize: "13px" }}>{review.author}</strong>
-                    {review.verified && (
-                      <span style={{ fontSize: "10.5px", color: "#166534", background: "#f0fdf4", padding: "1px 6px", borderRadius: "99px", display: "inline-block", marginTop: "3px", fontWeight: "600" }}>
-                        ✓ Verified Buyer
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    <div style={{ color: "#f59e0b", display: "flex", gap: "2px", fontSize: "15px" }}>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} style={{ opacity: i < review.rating ? 1 : 0.25 }}>★</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td style={{ maxWidth: "360px", fontSize: "13px", color: "#44354c", lineHeight: 1.5 }}>
-                    &ldquo;{review.comment}&rdquo;
-                  </td>
-                  <td style={{ fontSize: "12px", color: "#8a7e93" }}>
-                    {review.date || "Recent"}
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className={styles.iconButton}
-                      onClick={() => handleDeleteReview(productSlug, review.id)}
-                      title="Delete review"
-                    >
-                      <X size={15} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map(({ productSlug, productName, productImage, review }, idx) => {
+                // Find matching product if image not attached
+                const matchedProd = products.find((p) => p.slug === productSlug);
+                const displayImage = productImage || matchedProd?.image;
+
+                return (
+                  <tr key={review.id || `${productSlug}-${review.author}-${idx}`}>
+                    <td>
+                      <div className={styles.productCell}>
+                        <span
+                          className={`${styles.productThumb} ${styles[`thumb${idx % 4}`]}`}
+                          style={displayImage ? { padding: 0, overflow: "hidden", border: "1px solid #ebdff2", borderRadius: "8px" } : undefined}
+                        >
+                          {displayImage ? (
+                            <img
+                              src={displayImage}
+                              alt={productName}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                          ) : (
+                            <Package size={17} />
+                          )}
+                        </span>
+                        <span>
+                          <Link
+                            href={`/products/${productSlug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: "none" }}
+                            title="Open product in store"
+                          >
+                            <strong style={{ fontSize: "13.5px", color: "#3a2d42", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              {productName}
+                              <ExternalLink size={12} color="#8a7e93" />
+                            </strong>
+                          </Link>
+                          <small className={styles.tableSub}>{productSlug}</small>
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <strong style={{ fontSize: "13px", color: "#352844" }}>{review.author}</strong>
+                      {review.verified && (
+                        <div>
+                          <span style={{ fontSize: "10.5px", color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "1px 7px", borderRadius: "99px", display: "inline-block", marginTop: "3px", fontWeight: "600" }}>
+                            ✓ Verified Buyer
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <div style={{ color: "#f59e0b", display: "flex", gap: "2px", fontSize: "15px" }}>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span key={i} style={{ opacity: i < review.rating ? 1 : 0.25 }}>★</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td style={{ minWidth: "260px", maxWidth: "380px", whiteSpace: "normal", fontSize: "13px", color: "#44354c", lineHeight: 1.55 }}>
+                      &ldquo;{review.comment}&rdquo;
+                    </td>
+                    <td style={{ fontSize: "12.5px", color: "#776c82", whiteSpace: "nowrap" }}>
+                      {review.date || "Recent"}
+                    </td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <button
+                        type="button"
+                        className={styles.iconButton}
+                        onClick={() => handleDeleteReview(productSlug, review.id)}
+                        title="Delete review"
+                        style={{ color: "#b91c1c", background: "#fef2f2", border: "1px solid #fee2e2" }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           {filtered.length === 0 && (
