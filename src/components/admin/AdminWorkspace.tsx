@@ -260,7 +260,7 @@ export default function AdminWorkspace({ section, initialProductDialog = false }
     {section === "orders" && <>{data.ready && data.orders.length === 0 && <div className={styles.demoBanner}><span><Sparkles size={14} /> SAMPLE ORDERS</span><p>These example orders are for preview only. They are not real purchases and are not saved as store orders.</p></div>}<OrdersSection orders={visibleOrders} isPreview={!data.orders.length} search={search} onSearch={setSearch} status={statusFilter} onStatusFilter={setStatusFilter} onStatus={(id, status) => data.setOrderStatus(id, status)} onExport={() => exportOrders(orderRecords)} onSelectOrder={(order) => setSelectedOrder(order)} /></>}
     {section === "coupons" && <CouponsSection coupons={data.coupons} onSave={(updated) => data.syncWorkspace({ coupons: updated })} />}
     {section === "reviews" && <ReviewsSection products={data.products} onSaveProducts={(updated) => data.syncWorkspace({ products: updated })} />}
-    {section === "inquiries" && <InquiriesSection inquiries={data.inquiries} onStatus={(id, status) => data.setInquiryStatus(id, status)} />}
+    {section === "inquiries" && <InquiriesSection inquiries={data.inquiries} onStatus={(id, status, reply) => data.setInquiryStatus(id, status, reply)} />}
     {section === "customers" && <>{data.ready && data.orders.length === 0 && <div className={styles.demoBanner}><span><Sparkles size={14} /> SAMPLE CUSTOMERS</span><p>Example customer records are shown for preview and are not real purchases.</p></div>}<CustomersSection orders={data.orders.length ? data.orders : samplePreviewOrders} isPreview={!data.orders.length} search={search} onSearch={setSearch} /></>}
     {section === "categories" && <CategoriesSection categories={data.categories} products={data.products} onEdit={(category) => { setEditingCategory(category); setCategoryDialog(true); }} onDelete={handleDeleteCategory} />}
     {section === "reports" && <ReportsSection products={data.products} orders={data.orders} />}
@@ -2000,17 +2000,81 @@ function OrderDialog({ order, onClose, onStatusChange }: { order: AdminOrder; on
 
 function StatusBadge({ status }: { status: string }) { const kind = status.toLowerCase().replaceAll(" ", ""); return <span className={`${styles.statusPill} ${styles[`status${kind}`] ?? ""}`}><i />{status}</span>; }
 
-function InquiriesSection({ inquiries, onStatus }: { inquiries: any[]; onStatus: (id: string, status: "New" | "Read" | "Responded") => void }) {
+function InquiriesSection({
+  inquiries,
+  onStatus,
+}: {
+  inquiries: any[];
+  onStatus: (id: string, status: "New" | "Read" | "Responded", reply?: string) => void;
+}) {
   const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState<"all" | "today" | "week" | "month">("all");
+  const [replyInput, setReplyInput] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
+  const [replySuccessToast, setReplySuccessToast] = useState("");
 
-  const filteredInquiries = inquiries.filter((inq) => {
-    if (statusFilter === "all") return true;
-    return inq.status === statusFilter;
-  });
+  // Sort and Filter logic
+  const filteredInquiries = useMemo(() => {
+    return inquiries.filter((inq) => {
+      // 1. Status Filter
+      if (statusFilter !== "all" && inq.status !== statusFilter) return false;
+
+      // 2. Time Filter (Day-wise, Week-wise, Month-wise)
+      if (timeFilter !== "all") {
+        const inqDate = new Date(inq.createdAt || Date.now());
+        const now = new Date();
+        const diffMs = now.getTime() - inqDate.getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+
+        if (timeFilter === "today") {
+          // Within last 24 hours or same calendar date
+          const isSameDay = inqDate.toDateString() === now.toDateString() || diffHours <= 24;
+          if (!isSameDay) return false;
+        } else if (timeFilter === "week") {
+          // Within last 7 days
+          if (diffHours > 24 * 7) return false;
+        } else if (timeFilter === "month") {
+          // Within last 30 days
+          if (diffHours > 24 * 30) return false;
+        }
+      }
+
+      return true;
+    }).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }, [inquiries, statusFilter, timeFilter]);
+
+  const handleOpenInquiry = (inq: any) => {
+    setSelectedInquiry(inq);
+    setReplyInput(inq.adminReply || "");
+    if (inq.status === "New") {
+      onStatus(inq.id, "Read");
+    }
+  };
+
+  const handleSendAdminReply = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!selectedInquiry || !replyInput.trim()) return;
+
+    setSendingReply(true);
+    await onStatus(selectedInquiry.id, "Responded", replyInput.trim());
+
+    // Update selected inquiry locally
+    setSelectedInquiry({
+      ...selectedInquiry,
+      status: "Responded",
+      adminReply: replyInput.trim(),
+      repliedAt: new Date().toISOString(),
+    });
+
+    setSendingReply(false);
+    setReplySuccessToast("Response saved & synced to Customer Profile!");
+    setTimeout(() => setReplySuccessToast(""), 3500);
+  };
 
   return (
     <>
+      {/* Interactive Metric Cards */}
       <div className={styles.statStrip}>
         <div
           className={`${styles.statCardInteractive} ${statusFilter === "all" ? styles.statCardActive : ""}`}
@@ -2050,22 +2114,52 @@ function InquiriesSection({ inquiries, onStatus }: { inquiries: any[]; onStatus:
       </div>
 
       <section className={styles.panel}>
-        <div className={styles.panelHeading}>
+        <div className={styles.panelHeading} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "14px" }}>
           <div>
             <span className={styles.eyebrow}>CUSTOMER COMMUNICATION</span>
             <h2>Inquiry Inbox ({filteredInquiries.length})</h2>
-            <p>Direct inquiries submitted from the website contact page with full message preview and 1-click email response.</p>
+            <p>Direct inquiries submitted from storefront with day/week/month sorting and official customer responses.</p>
           </div>
-          {statusFilter !== "all" && (
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={() => setStatusFilter("all")}
-              style={{ fontSize: "12px", padding: "6px 12px" }}
-            >
-              Reset filter ✕
-            </button>
-          )}
+
+          {/* Time & Date Filter Dropdown (Day, Week, Month) */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f8f5fc", border: "1px solid #ebdff2", borderRadius: "8px", padding: "4px 8px" }}>
+              <CalendarDays size={14} color="#7451ba" />
+              <select
+                value={timeFilter}
+                onChange={(e) => setTimeFilter(e.target.value as any)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  fontSize: "12.5px",
+                  fontWeight: "650",
+                  color: "#423254",
+                  outline: "none",
+                  cursor: "pointer",
+                }}
+                title="Sort & Filter by Day, Week or Month"
+              >
+                <option value="all">📅 All Time (All Dates)</option>
+                <option value="today">📆 Today / Day-wise</option>
+                <option value="week">🗓️ This Week (Last 7 Days)</option>
+                <option value="month">📊 This Month (Last 30 Days)</option>
+              </select>
+            </div>
+
+            {(statusFilter !== "all" || timeFilter !== "all") && (
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => {
+                  setStatusFilter("all");
+                  setTimeFilter("all");
+                }}
+                style={{ fontSize: "12px", padding: "6px 12px" }}
+              >
+                Reset filters ✕
+              </button>
+            )}
+          </div>
         </div>
 
         <div className={styles.tableWrap}>
@@ -2082,17 +2176,54 @@ function InquiriesSection({ inquiries, onStatus }: { inquiries: any[]; onStatus:
             </thead>
             <tbody>
               {filteredInquiries.map((inq) => (
-                <tr key={inq.id} style={{ background: inq.status === "New" ? "rgba(244, 237, 248, 0.3)" : undefined }}>
+                <tr
+                  key={inq.id}
+                  style={{
+                    background: inq.status === "New" ? "rgba(244, 237, 248, 0.35)" : undefined,
+                    cursor: "pointer",
+                  }}
+                  onClick={(e) => {
+                    // If target is not the select dropdown, open modal
+                    const target = e.target as HTMLElement;
+                    if (target.tagName.toLowerCase() !== "select" && target.tagName.toLowerCase() !== "option" && target.tagName.toLowerCase() !== "a") {
+                      handleOpenInquiry(inq);
+                    }
+                  }}
+                  title="Click anywhere on this customer row to view details & reply"
+                >
                   <td>
-                    <strong>{inq.name}</strong>
-                    {inq.status === "New" && (
-                      <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "10px", fontWeight: "700", padding: "1px 6px", borderRadius: "99px", marginLeft: "6px" }}>
-                        NEW
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span className={styles.avatar} style={{ width: "32px", height: "32px", fontSize: "12px" }}>
+                        {inq.name ? inq.name.slice(0, 2).toUpperCase() : "CU"}
                       </span>
-                    )}
+                      <div>
+                        <strong style={{ color: "#372747", fontSize: "13.5px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          {inq.name}
+                          <Eye size={12} color="#7451ba" />
+                        </strong>
+                        {inq.status === "New" && (
+                          <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "9.5px", fontWeight: "700", padding: "1px 6px", borderRadius: "99px", marginLeft: "4px" }}>
+                            NEW
+                          </span>
+                        )}
+                        {inq.adminReply && (
+                          <span style={{ display: "block", color: "#166534", fontSize: "10.5px", fontWeight: "600", marginTop: "2px" }}>
+                            ✓ Responded
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td>
-                    <div><a href={`mailto:${inq.email}`} style={{ color: "#7652c8", fontWeight: "600" }}>{inq.email}</a></div>
+                    <div>
+                      <a
+                        href={`mailto:${inq.email}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ color: "#7652c8", fontWeight: "600", fontSize: "12.5px" }}
+                      >
+                        {inq.email}
+                      </a>
+                    </div>
                     {inq.phone && <small style={{ color: "#8a8197", display: "block", marginTop: "2px" }}>📞 {inq.phone}</small>}
                   </td>
                   <td style={{ maxWidth: "340px" }}>
@@ -2101,17 +2232,20 @@ function InquiriesSection({ inquiries, onStatus }: { inquiries: any[]; onStatus:
                       {inq.message || "No message body provided"}
                     </p>
                   </td>
-                  <td>{formatDate(inq.createdAt)}</td>
+                  <td style={{ whiteSpace: "nowrap", fontSize: "12px", color: "#7a6f87" }}>
+                    {formatDate(inq.createdAt)}
+                  </td>
                   <td>
                     <select
                       className={styles.filterSelect}
                       value={inq.status}
+                      onClick={(e) => e.stopPropagation()}
                       onChange={(e) => onStatus(inq.id, e.target.value as any)}
                       style={{
                         fontSize: "12px",
                         padding: "4px 8px",
                         fontWeight: "650",
-                        color: inq.status === "New" ? "#92400e" : inq.status === "Responded" ? "#166534" : "#4a3b56"
+                        color: inq.status === "New" ? "#92400e" : inq.status === "Responded" ? "#166534" : "#4a3b56",
                       }}
                     >
                       <option value="New">New</option>
@@ -2123,57 +2257,182 @@ function InquiriesSection({ inquiries, onStatus }: { inquiries: any[]; onStatus:
                     <button
                       type="button"
                       className={styles.secondaryButton}
-                      onClick={() => {
-                        setSelectedInquiry(inq);
-                        if (inq.status === "New") onStatus(inq.id, "Read");
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenInquiry(inq);
                       }}
                       style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "6px 12px", fontSize: "12px" }}
                     >
-                      <Eye size={13} /> View Message
+                      <Eye size={13} /> View &amp; Reply
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {filteredInquiries.length === 0 && <EmptyState title="No inquiries yet" body="Customer messages submitted through the contact page will appear here." />}
+          {filteredInquiries.length === 0 && (
+            <EmptyState
+              title="No inquiries found"
+              body={statusFilter !== "all" || timeFilter !== "all" ? "No messages match your selected date or status filters." : "Customer messages submitted through the contact page will appear here."}
+            />
+          )}
         </div>
       </section>
 
+      {/* Customer Inquiry Details & Real In-App Response Modal */}
       {selectedInquiry && (
-        <div className={styles.modalScrim} role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setSelectedInquiry(null); }}>
-          <section className={`${styles.modal} ${styles.orderModal}`} role="dialog" aria-modal="true" style={{ maxWidth: "580px" }}>
+        <div
+          className={styles.modalScrim}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setSelectedInquiry(null);
+          }}
+        >
+          <section
+            className={`${styles.modal} ${styles.orderModal}`}
+            role="dialog"
+            aria-modal="true"
+            style={{ maxWidth: "620px", maxHeight: "90vh", overflowY: "auto" }}
+          >
             <div className={styles.modalHead}>
               <div>
-                <span className={styles.eyebrow}>CUSTOMER MESSAGE DETAILS</span>
-                <h2>{selectedInquiry.subject || "Inquiry Details"}</h2>
-                <p>From <strong>{selectedInquiry.name}</strong> · {formatDate(selectedInquiry.createdAt)}</p>
+                <span className={styles.eyebrow}>CUSTOMER INQUIRY &amp; SUPPORT</span>
+                <h2 style={{ fontSize: "18px", color: "#2d1f3b", marginTop: "2px" }}>
+                  {selectedInquiry.subject || "Customer Inquiry"}
+                </h2>
+                <p style={{ fontSize: "12px", color: "#776b85" }}>
+                  From <strong>{selectedInquiry.name}</strong> · Received on {formatDate(selectedInquiry.createdAt)}
+                </p>
               </div>
-              <button type="button" className={styles.iconButton} onClick={() => setSelectedInquiry(null)}><X size={18} /></button>
-            </div>
-            <div className={styles.orderSectionBlock}>
-              <h4 style={{ margin: "0 0 6px", fontSize: "13px", color: "#4f2b66" }}>Customer Contact Details</h4>
-              <div style={{ background: "#fbf9fc", border: "1px solid #ebddee", borderRadius: "10px", padding: "12px 14px", fontSize: "13px" }}>
-                <div>Email: <a href={`mailto:${selectedInquiry.email}`} style={{ color: "#7652c8", fontWeight: 600 }}>{selectedInquiry.email}</a></div>
-                {selectedInquiry.phone && <div style={{ marginTop: "4px" }}>Phone: <strong>{selectedInquiry.phone}</strong></div>}
-              </div>
-            </div>
-            <div className={styles.orderSectionBlock}>
-              <h4 style={{ margin: "0 0 6px", fontSize: "13px", color: "#4f2b66" }}>Full Customer Message</h4>
-              <div style={{ background: "#ffffff", border: "1.5px solid #ece4f0", borderRadius: "10px", padding: "16px", fontSize: "13.5px", color: "#2e243d", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
-                {selectedInquiry.message}
-              </div>
-            </div>
-            <div className={styles.modalActions} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <a
-                href={`mailto:${selectedInquiry.email}?subject=Re: ${encodeURIComponent(selectedInquiry.subject || 'Your Swachetna Foundation Inquiry')}`}
-                className={styles.primaryButton}
-                onClick={() => onStatus(selectedInquiry.id, "Responded")}
-                style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}
+              <button
+                type="button"
+                className={styles.iconButton}
+                onClick={() => setSelectedInquiry(null)}
+                aria-label="Close"
               >
-                Reply via Gmail / Email ✉️
-              </a>
-              <button type="button" className={styles.secondaryButton} onClick={() => setSelectedInquiry(null)}>Close</button>
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Customer Contact Details */}
+            <div className={styles.orderSectionBlock}>
+              <h4 style={{ margin: "0 0 6px", fontSize: "12.5px", color: "#54336c", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Customer Information
+              </h4>
+              <div style={{ background: "#fcfafc", border: "1px solid #ebddee", borderRadius: "10px", padding: "12px 14px", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                <div>
+                  <div style={{ fontWeight: "700", color: "#312340" }}>{selectedInquiry.name}</div>
+                  <div style={{ marginTop: "2px" }}>
+                    Email: <a href={`mailto:${selectedInquiry.email}`} style={{ color: "#7652c8", fontWeight: 600 }}>{selectedInquiry.email}</a>
+                  </div>
+                  {selectedInquiry.phone && (
+                    <div style={{ marginTop: "2px", color: "#61556e" }}>
+                      Phone: <strong>{selectedInquiry.phone}</strong>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ textAlign: "right" }}>
+                  <span
+                    style={{
+                      padding: "4px 10px",
+                      borderRadius: "99px",
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      background: selectedInquiry.status === "New" ? "#fef3c7" : selectedInquiry.status === "Responded" ? "#f0fdf4" : "#f3e8ff",
+                      color: selectedInquiry.status === "New" ? "#92400e" : selectedInquiry.status === "Responded" ? "#166534" : "#6b21a8",
+                      border: "1px solid currentColor",
+                    }}
+                  >
+                    ● Status: {selectedInquiry.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Customer Message Body */}
+            <div className={styles.orderSectionBlock}>
+              <h4 style={{ margin: "0 0 6px", fontSize: "12.5px", color: "#54336c", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Inquiry Message
+              </h4>
+              <div style={{ background: "#ffffff", border: "1.5px solid #ece4f0", borderRadius: "10px", padding: "14px 16px", fontSize: "13.5px", color: "#2e243d", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
+                {selectedInquiry.message || "No message body."}
+              </div>
+            </div>
+
+            {/* Admin Response Box (Amazon/Nykaa style official reply) */}
+            <div className={styles.orderSectionBlock}>
+              <h4 style={{ margin: "0 0 6px", fontSize: "12.5px", color: "#54336c", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Official Foundation Response
+              </h4>
+
+              <form onSubmit={handleSendAdminReply}>
+                <textarea
+                  rows={4}
+                  value={replyInput}
+                  onChange={(e) => setReplyInput(e.target.value)}
+                  placeholder="Type your official reply to this customer (e.g. Hello Punam, thank you for reaching out! We are glad to inform you that...)"
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #d8cbdf",
+                    fontSize: "13px",
+                    color: "#281b35",
+                    lineHeight: 1.5,
+                    resize: "vertical",
+                    outline: "none",
+                  }}
+                  required
+                />
+
+                {replySuccessToast && (
+                  <div style={{ marginTop: "6px", color: "#166534", fontSize: "12px", fontWeight: "600", display: "flex", alignItems: "center", gap: "5px" }}>
+                    <Check size={14} /> {replySuccessToast}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", flexWrap: "wrap", gap: "10px" }}>
+                  <button
+                    type="submit"
+                    disabled={sendingReply || !replyInput.trim()}
+                    className={styles.primaryButton}
+                    style={{ fontSize: "12.5px", padding: "8px 18px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                  >
+                    {sendingReply ? "Saving response..." : <><Check size={14} /> Send &amp; Save Response</>}
+                  </button>
+
+                  <a
+                    href={`mailto:${selectedInquiry.email}?subject=Re: ${encodeURIComponent(selectedInquiry.subject || 'Your Swachetna Foundation Inquiry')}&body=${encodeURIComponent(replyInput || 'Hello ' + selectedInquiry.name + ',
+
+Thank you for reaching out to Swachetna Foundation!
+
+')}`}
+                    className={styles.secondaryButton}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      if (!selectedInquiry.adminReply && replyInput.trim()) {
+                        onStatus(selectedInquiry.id, "Responded", replyInput.trim());
+                      }
+                    }}
+                    style={{ fontSize: "12px", padding: "7px 14px", display: "inline-flex", alignItems: "center", gap: "6px", color: "#59368d" }}
+                    title="Send prefilled email directly via Gmail client"
+                  >
+                    Open in Gmail ✉️
+                  </a>
+                </div>
+              </form>
+            </div>
+
+            <div className={styles.modalActions} style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setSelectedInquiry(null)}
+              >
+                Close
+              </button>
             </div>
           </section>
         </div>

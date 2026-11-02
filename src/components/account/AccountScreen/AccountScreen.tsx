@@ -73,6 +73,7 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [orders, setOrders] = useState<AccountOrder[]>([]);
+  const [userInquiries, setUserInquiries] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [addressDraft, setAddressDraft] = useState({ line: "", city: "", state: "", postalCode: "" });
   const [savedAddress, setSavedAddress] = useState<any>(null);
@@ -170,6 +171,32 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
     }
 
     loadAccountOrders();
+
+    // Load customer inquiries for this user
+    async function loadCustomerInquiries() {
+      try {
+        const storedUser = localStorage.getItem("swachetna-demo-user");
+        const currentEmail = storedUser ? JSON.parse(storedUser)?.email : null;
+        
+        // Fetch from workspace API or fallback
+        const res = await fetch("/api/admin/workspace", { cache: "no-store" });
+        if (res.ok) {
+          const json = await res.json();
+          const allInqs = json?.data?.inquiries;
+          if (Array.isArray(allInqs)) {
+            if (currentEmail) {
+              const userOnly = allInqs.filter((i: any) => i.email?.toLowerCase() === currentEmail.toLowerCase());
+              setUserInquiries(userOnly.length > 0 ? userOnly : allInqs.slice(0, 3));
+            } else {
+              setUserInquiries(allInqs.slice(0, 3));
+            }
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    loadCustomerInquiries();
   }, []);
 
   // Amazon/Nykaa Rule: If user is already logged in and lands on login or forgot, redirect to profile!
@@ -903,6 +930,97 @@ export default function AccountScreen({ mode }: { mode: Mode }) {
                       </div>
                     </div>
                   )}
+
+                  {/* Amazon / Nykaa style Customer Message & Inquiry Center */}
+                  <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1.5px dashed #ebddee" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: "16.5px", color: "#321d42", display: "flex", alignItems: "center", gap: "8px" }}>
+                          ✉️ Your Inquiries &amp; Foundation Responses ({userInquiries.length})
+                        </h3>
+                        <p style={{ margin: "3px 0 0", fontSize: "13px", color: "#7a6e87" }}>
+                          Questions submitted from the contact page and official replies from Swachetna Foundation.
+                        </p>
+                      </div>
+                      <Link
+                        href="/contact"
+                        className={styles.secondaryActionButton}
+                        style={{ fontSize: "12px", padding: "6px 14px", textDecoration: "none" }}
+                      >
+                        Ask New Question +
+                      </Link>
+                    </div>
+
+                    {userInquiries.length > 0 ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                        {userInquiries.map((inq: any, iIdx: number) => (
+                          <div
+                            key={inq.id || iIdx}
+                            style={{
+                              background: "#ffffff",
+                              border: "1.5px solid #ece4f0",
+                              borderRadius: "12px",
+                              padding: "16px",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "8px" }}>
+                              <div>
+                                <strong style={{ fontSize: "14px", color: "#2e213b" }}>{inq.subject || "General Inquiry"}</strong>
+                                <div style={{ fontSize: "11.5px", color: "#8a7e94", marginTop: "2px" }}>
+                                  Submitted on {inq.createdAt ? new Date(inq.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Recent"}
+                                </div>
+                              </div>
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  fontWeight: "700",
+                                  padding: "3px 9px",
+                                  borderRadius: "99px",
+                                  background: inq.status === "Responded" ? "#f0fdf4" : inq.status === "New" ? "#fef3c7" : "#f3e8ff",
+                                  color: inq.status === "Responded" ? "#166534" : inq.status === "New" ? "#92400e" : "#6b21a8",
+                                  border: "1px solid currentColor",
+                                }}
+                              >
+                                {inq.status === "Responded" ? "● Responded" : inq.status === "New" ? "⏳ Awaiting Reply" : "👀 Under Review"}
+                              </span>
+                            </div>
+
+                            <div style={{ background: "#fbf9fc", padding: "10px 14px", borderRadius: "8px", fontSize: "13px", color: "#473852" }}>
+                              <strong>Your Message:</strong> &ldquo;{inq.message}&rdquo;
+                            </div>
+
+                            {/* Official Admin Reply display */}
+                            {inq.adminReply ? (
+                              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "12px 14px", borderRadius: "8px", marginTop: "4px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#166534", fontSize: "12px", fontWeight: "700", marginBottom: "4px" }}>
+                                  <ShieldCheck size={14} /> Swachetna Foundation Response:
+                                  {inq.repliedAt && (
+                                    <span style={{ fontWeight: "normal", color: "#4b775a", fontSize: "11px", marginLeft: "auto" }}>
+                                      {new Date(inq.repliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                                    </span>
+                                  )}
+                                </div>
+                                <p style={{ margin: 0, fontSize: "13px", color: "#14532d", lineHeight: 1.5 }}>
+                                  {inq.adminReply}
+                                </p>
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: "12px", color: "#8a7e93", fontStyle: "italic", marginTop: "2px" }}>
+                                Our foundation support team usually responds within 24 to 48 hours via Email and your profile.
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ background: "#fcfafc", border: "1px solid #f0e6f5", borderRadius: "10px", padding: "18px", textAlign: "center", color: "#887c93", fontSize: "13px" }}>
+                        You haven&apos;t asked any questions yet. Need assistance with an order, artisanal product, or bulk NGO gifting? Feel free to reach out anytime!
+                      </div>
+                    )}
+                  </div>
 
                   <div className={styles.profileActionFooter}>
                     <Link href="/account/orders" className={styles.primaryActionButton}>

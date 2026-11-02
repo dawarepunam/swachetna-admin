@@ -55,6 +55,8 @@ export type AdminInquiry = {
   message: string;
   status: "New" | "Read" | "Responded";
   createdAt: string;
+  adminReply?: string;
+  repliedAt?: string;
 };
 
 export type AdminCoupon = {
@@ -89,7 +91,7 @@ type AdminDataValue = WorkspaceState & {
   setInquiries: Dispatch<SetStateAction<AdminInquiry[]>>;
   setCoupons: Dispatch<SetStateAction<AdminCoupon[]>>;
   setOrderStatus: (id: string, status: AdminOrder["status"]) => Promise<boolean>;
-  setInquiryStatus: (id: string, status: AdminInquiry["status"]) => Promise<boolean>;
+  setInquiryStatus: (id: string, status: AdminInquiry["status"], reply?: string) => Promise<boolean>;
   syncToStrapi: (customProducts?: AdminProduct[]) => Promise<boolean>;
   syncWorkspace: (overrides?: Partial<WorkspaceState & { orders: AdminOrder[] }>) => Promise<boolean>;
 };
@@ -447,8 +449,17 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     return syncWorkspace({ orderStatuses: updatedStatuses });
   };
 
-  const setInquiryStatus = async (id: string, status: AdminInquiry["status"]): Promise<boolean> => {
-    const updatedInqs = inquiries.map((inq) => inq.id === id ? { ...inq, status } : inq);
+  const setInquiryStatus = async (id: string, status: AdminInquiry["status"], reply?: string): Promise<boolean> => {
+    const updatedInqs = inquiries.map((inq) => {
+      if (inq.id === id) {
+        return {
+          ...inq,
+          status,
+          ...(reply !== undefined ? { adminReply: reply, repliedAt: new Date().toISOString() } : {})
+        };
+      }
+      return inq;
+    });
     setInquiries(updatedInqs);
     return syncWorkspace({ inquiries: updatedInqs });
   };
