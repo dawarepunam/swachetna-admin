@@ -331,6 +331,42 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      const syncLocalOrders = () => {
+        try {
+          const rawOrders = window.localStorage.getItem(ORDER_STORAGE_KEY);
+          const parsedOrders: unknown = rawOrders ? JSON.parse(rawOrders) : [];
+          if (Array.isArray(parsedOrders) && parsedOrders.length > 0) {
+            const valid = parsedOrders.filter(isLocalOrder).map((order) => {
+              const addressParts = [order.customer.address, order.customer.city, order.customer.state, order.customer.postalCode].filter(Boolean);
+              return {
+                id: order.reference,
+                customer: order.customer.name,
+                customerEmail: order.customer.email || "",
+                customerPhone: order.customer.phone || "",
+                customerAddress: addressParts.join(", ") || "",
+                items: Array.isArray(order.items) ? order.items : [],
+                total: order.total,
+                createdAt: order.createdAt,
+                paymentMethod: order.paymentMethod,
+                status: (order.status as AdminOrder["status"]) || "Pending",
+              };
+            });
+            setOrders((prev) => {
+              const merged = [...valid, ...prev];
+              return [...new Map(merged.map((o) => [o.id, o])).values()];
+            });
+          }
+        } catch { /* ignore */ }
+      };
+
+      syncLocalOrders();
+      setReady(true);
+    }
+
+    loadData();
+
+    // Real-time synchronization across tabs and in-page events without page refresh
+    const handleOrderSync = () => {
       try {
         const rawOrders = window.localStorage.getItem(ORDER_STORAGE_KEY);
         const parsedOrders: unknown = rawOrders ? JSON.parse(rawOrders) : [];
@@ -350,16 +386,25 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
               status: (order.status as AdminOrder["status"]) || "Pending",
             };
           });
-          setOrders([...new Map(valid.map((order) => [order.id, order])).values()]);
+          setOrders((prev) => {
+            const merged = [...valid, ...prev];
+            return [...new Map(merged.map((o) => [o.id, o])).values()];
+          });
         }
-      } catch {
-        setOrders([]);
-      }
+      } catch { /* ignore */ }
+    };
 
-      setReady(true);
-    }
+    window.addEventListener("swachetna-orders-updated", handleOrderSync);
+    window.addEventListener("storage", handleOrderSync);
 
-    loadData();
+    // Periodic live background sync every 3 seconds to keep real-time orders live without refresh
+    const timer = window.setInterval(handleOrderSync, 3000);
+
+    return () => {
+      window.removeEventListener("swachetna-orders-updated", handleOrderSync);
+      window.removeEventListener("storage", handleOrderSync);
+      window.clearInterval(timer);
+    };
   }, []);
 
   const [hasUserEdited, setHasUserEdited] = useState(false);

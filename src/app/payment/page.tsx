@@ -109,6 +109,9 @@ export default function PaymentPage() {
     window.localStorage.setItem("swachetna-demo-orders", JSON.stringify([order, ...orders]));
     window.localStorage.setItem("swachetna-last-demo-order", JSON.stringify(order));
     window.sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+    try {
+      window.dispatchEvent(new Event("swachetna-orders-updated"));
+    } catch { /* ignore */ }
 
     try {
       const { submitStrapiOrder } = await import("../../lib/strapi");

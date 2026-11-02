@@ -3302,21 +3302,55 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
   ], []);
 
   const [deletedReviewIds, setDeletedReviewIds] = useState<string[]>([]);
-  useEffect(() => {
+  const [userSubmittedReviews, setUserSubmittedReviews] = useState<Array<{ productSlug: string; review: any }>>([]);
+
+  const syncReviews = () => {
     try {
-      const stored = window.localStorage.getItem("swachetna-deleted-review-ids");
-      if (stored) setDeletedReviewIds(JSON.parse(stored));
+      const delStored = window.localStorage.getItem("swachetna-deleted-review-ids");
+      if (delStored) setDeletedReviewIds(JSON.parse(delStored));
+      const userStored = window.localStorage.getItem("swachetna-user-submitted-reviews");
+      if (userStored) setUserSubmittedReviews(JSON.parse(userStored));
     } catch { /* ignore */ }
+  };
+
+  useEffect(() => {
+    syncReviews();
+    window.addEventListener("swachetna-reviews-updated", syncReviews);
+    window.addEventListener("storage", syncReviews);
+    const revTimer = window.setInterval(syncReviews, 3000);
+    return () => {
+      window.removeEventListener("swachetna-reviews-updated", syncReviews);
+      window.removeEventListener("storage", syncReviews);
+      window.clearInterval(revTimer);
+    };
   }, []);
 
   const allReviewsWithProduct = useMemo(() => {
     const list: Array<{ productSlug: string; productName: string; productImage?: string; review: any }> = [];
+    const seenIds = new Set<string>();
+
+    // 1. Process reviews from product catalog
     products.forEach((p) => {
       if (Array.isArray(p.reviews) && p.reviews.length > 0) {
         p.reviews.forEach((r) => {
-          if (!deletedReviewIds.includes(r.id)) {
+          if (!deletedReviewIds.includes(r.id) && !seenIds.has(r.id)) {
+            seenIds.add(r.id);
             list.push({ productSlug: p.slug, productName: p.name, productImage: p.image, review: r });
           }
+        });
+      }
+    });
+
+    // 2. Real-time customer reviews submitted from product pages (instant without refresh)
+    userSubmittedReviews.forEach((usr) => {
+      if (!deletedReviewIds.includes(usr.review.id) && !seenIds.has(usr.review.id)) {
+        seenIds.add(usr.review.id);
+        const match = products.find((p) => p.slug === usr.productSlug);
+        list.unshift({
+          productSlug: usr.productSlug,
+          productName: match ? match.name : usr.productSlug,
+          productImage: match?.image,
+          review: usr.review,
         });
       }
     });
@@ -3325,7 +3359,7 @@ function ReviewsSection({ products, onSaveProducts }: { products: AdminProduct[]
       return defaultSampleReviews.filter((sr) => !deletedReviewIds.includes(sr.review.id));
     }
     return list.filter((item) => !deletedReviewIds.includes(item.review.id));
-  }, [products, defaultSampleReviews, deletedReviewIds]);
+  }, [products, defaultSampleReviews, deletedReviewIds, userSubmittedReviews]);
 
   const [filterRating, setFilterRating] = useState("all");
   const [selectedProductReviewModal, setSelectedProductReviewModal] = useState<{

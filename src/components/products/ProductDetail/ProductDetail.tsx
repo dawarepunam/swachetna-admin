@@ -217,6 +217,11 @@ export default function ProductDetail({ product }: { product: Product }) {
       if (res.ok && data.review) {
         setReviewsList((prev) => [data.review, ...prev]);
         setReviewSuccess(true);
+        try {
+          const storedRev = JSON.parse(localStorage.getItem("swachetna-user-submitted-reviews") || "[]");
+          localStorage.setItem("swachetna-user-submitted-reviews", JSON.stringify([{ productSlug: product.slug, review: data.review }, ...storedRev]));
+          window.dispatchEvent(new Event("swachetna-reviews-updated"));
+        } catch { /* ignore */ }
         setAuthorName("");
         setReviewComment("");
         setReviewRating(5);
