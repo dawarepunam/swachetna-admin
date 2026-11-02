@@ -44,7 +44,16 @@ export default function PaymentPage() {
   const shipping = subtotal >= 1500 || subtotal === 0 ? 0 : 99;
   const discountAmount = appliedCoupon ? Math.min(subtotal, appliedCoupon.discount) : 0;
   const grandTotal = Math.max(0, subtotal - discountAmount + shipping);
-  const lines = useMemo(() => cart.map((line) => ({ ...line, product: allProducts.find((product) => product.id === line.productId) })).filter((line) => line.product), [cart, allProducts]);
+  const findMatchingProduct = (lookupId: string) => {
+    if (!lookupId) return undefined;
+    const lower = String(lookupId).toLowerCase().trim();
+    return allProducts.find((p) =>
+      String(p.id).toLowerCase().trim() === lower ||
+      (p.slug && p.slug.toLowerCase().trim() === lower) ||
+      (p.sku && p.sku.toLowerCase().trim() === lower)
+    );
+  };
+  const lines = useMemo(() => cart.map((line) => ({ ...line, product: findMatchingProduct(line.productId) })).filter((line) => line.product), [cart, allProducts]);
 
   useEffect(() => {
     try {
