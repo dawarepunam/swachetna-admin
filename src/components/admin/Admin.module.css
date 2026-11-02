@@ -1404,12 +1404,66 @@
 
 .statStrip5 {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   margin: 0 0 18px;
   border: 1px solid #eae5f2;
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 3px 12px rgba(45, 25, 75, 0.03);
+  overflow: hidden;
+}
+
+@media (min-width: 1025px) {
+  .statStrip5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 641px) {
+  .statStrip5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .statStrip5 > div {
+    border-right: 1px solid #f0ecf5;
+    border-bottom: 1px solid #f0ecf5;
+  }
+  .statStrip5 > div:nth-child(3n) {
+    border-right: none;
+  }
+}
+
+@media (max-width: 640px) and (min-width: 421px) {
+  .statStrip,
+  .statStrip5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .statStrip > div,
+  .statStrip5 > div {
+    border-right: 1px solid #f0ecf5;
+    border-bottom: 1px solid #f0ecf5;
+    padding: 12px 14px;
+  }
+  .statStrip > div:nth-child(2n),
+  .statStrip5 > div:nth-child(2n) {
+    border-right: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .statStrip,
+  .statStrip5 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .statStrip > div,
+  .statStrip5 > div {
+    padding: 10px 12px;
+    border-right: 1px solid #f0ecf5;
+    border-bottom: 1px solid #f0ecf5;
+  }
+  .statStrip > div:nth-child(2n),
+  .statStrip5 > div:nth-child(2n) {
+    border-right: none;
+  }
 }
 
 .statStrip>div {
