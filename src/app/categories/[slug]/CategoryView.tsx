@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Sparkles, Filter, PackageOpen, ChevronRight, Layers } from "lucide-react";
 import ProductGrid from "../../../components/products/ProductGrid/ProductGrid";
 import type { Product } from "../../../types/product";
@@ -22,7 +23,22 @@ export default function CategoryView({
   subcategories,
   items,
 }: CategoryViewProps) {
+  const searchParams = useSearchParams();
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("All");
+
+  useEffect(() => {
+    const subParam = searchParams.get("sub");
+    if (subParam) {
+      const match = subcategories.find(
+        (s) => s.trim().toLowerCase() === subParam.trim().toLowerCase()
+      );
+      if (match) {
+        setSelectedSubcategory(match);
+      } else {
+        setSelectedSubcategory(subParam);
+      }
+    }
+  }, [searchParams, subcategories]);
 
   // Compute item counts per subcategory
   const counts = useMemo(() => {

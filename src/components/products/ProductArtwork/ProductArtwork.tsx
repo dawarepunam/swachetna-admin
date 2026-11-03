@@ -4,13 +4,28 @@ import styles from "./ProductArtwork.module.css";
 export default function ProductArtwork({ product, large = false }: { product: Product; large?: boolean }) {
   if (product.image) {
     return (
-      <div className={`${styles.art} ${large ? styles.large : ""}`} style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", background: "#fbf9fc" }}>
+      <div
+        className={`${styles.art} ${large ? styles.large : ""}`}
+        style={{
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          background: "#fbf9fc",
+          padding: large ? "16px" : "12px",
+          aspectRatio: "1 / 1",
+          width: "100%",
+          height: "100%",
+          boxSizing: "border-box"
+        }}
+      >
         <img
           src={product.image}
           alt={product.name}
           style={{
-            maxWidth: "100%",
-            maxHeight: "100%",
+            maxWidth: "92%",
+            maxHeight: "92%",
             width: "auto",
             height: "auto",
             objectFit: "contain",

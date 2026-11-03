@@ -243,7 +243,7 @@ export default function Header() {
                             return (
                               <Link
                                 key={sub}
-                                href={`/categories/${currentHoverCategory?.slug}`}
+                                href={`/categories/${currentHoverCategory?.slug}?sub=${encodeURIComponent(sub)}`}
                                 className={styles.megaSubItem}
                                 onClick={() => setMegaMenuOpen(false)}
                               >
