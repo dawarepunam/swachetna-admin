@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useProducts } from "../../../context/ProductsContext";
 import ProductGrid from "../ProductGrid/ProductGrid";
@@ -8,6 +9,7 @@ import EmptyState from "../../ui/EmptyState/EmptyState";
 import styles from "./CatalogBrowser.module.css";
 
 export default function CatalogBrowser({ mode = "shop", initialQuery = "" }: { mode?: "shop" | "search"; initialQuery?: string }) {
+  const searchParams = useSearchParams();
   const { products, categories } = useProducts();
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState("All");
@@ -18,15 +20,16 @@ export default function CatalogBrowser({ mode = "shop", initialQuery = "" }: { m
   const [limit, setLimit] = useState(6);
   const [mobileFilters, setMobileFilters] = useState(false);
 
-  // Sync with URL query parameter ?q= if on search page
+  // Sync with URL query parameter ?q= if on search page or URL changes
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const urlQ = new URLSearchParams(window.location.search).get("q");
-      if (urlQ) {
-        setQuery(urlQ);
-      }
+    const urlQ = searchParams?.get("q");
+    if (urlQ !== null && urlQ !== undefined) {
+      setQuery(urlQ);
+    } else if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search).get("q");
+      if (q) setQuery(q);
     }
-  }, []);
+  }, [searchParams]);
 
   // Active category's available subcategories
   const activeCategoryObj = useMemo(() => {

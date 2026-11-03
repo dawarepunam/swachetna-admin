@@ -1849,7 +1849,15 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
     ? <Link href="/admin/products" className={className} aria-label={label}>{child}</Link>
     : <button type="button" className={className} onClick={onClose} aria-label={label}>{child}</button>;
   return <div className={styles.modalScrim} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section id="product-dialog" className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="product-dialog-title"><div className={styles.modalHead}><div><span className={styles.eyebrow}>PRODUCT CATALOG</span><h2 id="product-dialog-title">{product ? "Edit product" : "Add product"}</h2><p>Add the product details, description, image, price and available quantity.</p></div>{closeControl(styles.iconButton, "Close product form", <X size={18} />)}</div><form className={styles.modalForm} onSubmit={submit}>
-    <label>Product name<input autoFocus autoComplete="off" value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Handcrafted Mango Pickle / Dryfruit Laddu" required maxLength={100} /></label>
+    <label>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span>Product name</span>
+        <small style={{ fontSize: "11px", color: name.length > 70 ? "#dc2626" : "#88759d", fontWeight: 600 }}>
+          {name.length}/80 characters
+        </small>
+      </div>
+      <input autoFocus autoComplete="off" value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Handcrafted Mango Pickle / Dryfruit Laddu" required maxLength={80} />
+    </label>
     <label>Product description<textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Describe the product, ingredients, materials or what makes it special..." maxLength={1200} /></label>
     
     {/* Nykaa Style Multi-Angle Gallery Uploader */}

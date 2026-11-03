@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Heart, Search, ShoppingBag, UserRound, ChevronDown, Sparkles, X, ArrowRight } from "lucide-react";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useStore } from "../../../context/StoreContext";
@@ -12,6 +12,7 @@ import MobileNavigation from "../MobileNavigation/MobileNavigation";
 import styles from "./Header.module.css";
 
 export default function Header() {
+  const router = useRouter();
   const pathname = usePathname();
   const isHomePage = pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
@@ -309,6 +310,13 @@ export default function Header() {
                     setSearchQuery(e.target.value);
                     setSearchOpen(true);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && searchQuery.trim().length > 0) {
+                      e.preventDefault();
+                      setSearchOpen(false);
+                      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                    }
+                  }}
                   onFocus={() => {
                     if (searchQuery.trim().length >= 2) setSearchOpen(true);
                   }}
@@ -467,6 +475,14 @@ export default function Header() {
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setSearchOpen(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && searchQuery.trim().length > 0) {
+                    e.preventDefault();
+                    setSearchOpen(false);
+                    setMobileSearchVisible(false);
+                    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                  }
                 }}
                 className={styles.mobileSearchInput}
                 aria-label="Mobile Search"

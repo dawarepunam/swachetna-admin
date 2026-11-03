@@ -107,7 +107,9 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-overflow: ellipsis;
   min-height: 44px;
+  max-height: 44px;
   margin-top: 2px;
   color: #2b173c;
   font-family: var(--font-heading);
