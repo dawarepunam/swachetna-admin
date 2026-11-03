@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { ArrowDownRight, ArrowUpRight, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Download, ExternalLink, Eye, FileText, Filter, HeartHandshake, MoreHorizontal, Package, Plus, Printer, Search, Shapes, ShoppingCart, SlidersHorizontal, Sparkles, Trash2, TrendingUp, Truck, Upload, Users, X } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Download, Edit2, ExternalLink, Eye, FileText, Filter, HeartHandshake, MoreHorizontal, Package, Plus, Printer, Search, Shapes, ShoppingCart, SlidersHorizontal, Sparkles, Trash2, TrendingUp, Truck, Upload, Users, X } from "lucide-react";
 import { formatCurrency } from "../../data/products";
 import { useAdminData, type AdminCampaign, type AdminCategory, type AdminCoupon, type AdminOrder, type AdminProduct } from "./AdminData";
 import styles from "./Admin.module.css";
@@ -2219,27 +2219,116 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
         <>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
             {variantsList.map((v, vIdx) => (
-              <button
+              <div
                 key={v.name + vIdx}
-                type="button"
-                onClick={() => setActiveVariantTab(vIdx)}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  padding: "5px 10px",
-                  borderRadius: "15px",
+                  padding: "4px 8px 4px 10px",
+                  borderRadius: "16px",
                   border: activeVariantTab === vIdx ? "2px solid #7451ba" : "1px solid #d4c8e5",
                   background: activeVariantTab === vIdx ? "#7451ba" : "#fff",
                   color: activeVariantTab === vIdx ? "#fff" : "#483660",
                   fontSize: "11px",
                   fontWeight: 700,
-                  cursor: "pointer"
+                  boxShadow: activeVariantTab === vIdx ? "0 2px 8px rgba(116, 81, 186, 0.25)" : "none",
+                  transition: "all 0.18s ease"
                 }}
               >
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: v.hex }} />
-                {v.name} ({v.images.length} photos)
-              </button>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setActiveVariantTab(vIdx)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    cursor: "pointer",
+                    userSelect: "none"
+                  }}
+                  title={`Select ${v.name}`}
+                >
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: v.hex || "#7451ba" }} />
+                  <span>{v.name}</span>
+                  <small style={{ opacity: activeVariantTab === vIdx ? 0.9 : 0.65, fontSize: "10px" }}>({v.images.length})</small>
+                </div>
+
+                {/* Edit Sub-Type Name */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const newName = prompt(`Edit sub-type name:`, v.name);
+                    if (newName && newName.trim() && newName.trim() !== v.name) {
+                      const updatedName = newName.trim();
+                      setVariantsList((prev) => {
+                        const copy = [...prev];
+                        copy[vIdx] = { ...copy[vIdx], name: updatedName };
+                        return copy;
+                      });
+                      setColorsText((prev) => {
+                        const arr = prev.split(",").map((s) => s.trim()).filter(Boolean);
+                        const idx = arr.indexOf(v.name);
+                        if (idx !== -1) arr[idx] = updatedName;
+                        else arr.push(updatedName);
+                        return arr.join(", ");
+                      });
+                    }
+                  }}
+                  style={{
+                    background: activeVariantTab === vIdx ? "rgba(255,255,255,0.22)" : "#f3edf8",
+                    color: activeVariantTab === vIdx ? "#fff" : "#6c4d8b",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "20px",
+                    height: "20px",
+                    display: "grid",
+                    placeItems: "center",
+                    cursor: "pointer",
+                    padding: 0
+                  }}
+                  title={`Rename "${v.name}"`}
+                >
+                  <Edit2 size={10} />
+                </button>
+
+                {/* Delete Sub-Type */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Are you sure you want to delete sub-type "${v.name}"?`)) {
+                      setVariantsList((prev) => prev.filter((_, idx) => idx !== vIdx));
+                      setColorsText((prev) => {
+                        return prev
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter((s) => s && s.toLowerCase() !== v.name.toLowerCase())
+                          .join(", ");
+                      });
+                      if (activeVariantTab >= vIdx && activeVariantTab > 0) {
+                        setActiveVariantTab((prev) => prev - 1);
+                      }
+                    }
+                  }}
+                  style={{
+                    background: activeVariantTab === vIdx ? "rgba(255,255,255,0.22)" : "#fee2e2",
+                    color: activeVariantTab === vIdx ? "#fff" : "#dc2626",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "20px",
+                    height: "20px",
+                    display: "grid",
+                    placeItems: "center",
+                    cursor: "pointer",
+                    padding: 0
+                  }}
+                  title={`Delete "${v.name}"`}
+                >
+                  <Trash2 size={10} />
+                </button>
+              </div>
             ))}
           </div>
 
