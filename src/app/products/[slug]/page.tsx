@@ -10,6 +10,7 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const liveData = await fetchStrapiAdminWorkspace();
     const data = (liveData && Array.isArray(liveData.products) && liveData.products.length > 0) ? liveData : (seededWorkspace as any);
+    const fallbackMatch = fallbackProducts.find((item) => item.slug === slug);
     if (data && Array.isArray(data.products)) {
       const match = data.products.find((p: any) => p.slug === slug);
       if (match) {
@@ -35,6 +36,11 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
           sizes: typeof match.sizes === "string" ? match.sizes.split(",").map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(match.sizes) ? match.sizes : []),
           variants: Array.isArray(match.variants) ? match.variants : (typeof match.variants === 'string' ? (() => { try { return JSON.parse(match.variants); } catch { return []; } })() : []),
           reviews: Array.isArray(match.reviews) ? match.reviews : [],
+          gstRate: match.gstRate !== undefined ? Number(match.gstRate) : fallbackMatch?.gstRate,
+          hsnCode: match.hsnCode || fallbackMatch?.hsnCode,
+          sizePrices: (typeof match.sizePrices === 'object' && match.sizePrices !== null)
+            ? match.sizePrices
+            : (typeof match.sizePrices === 'string' ? (() => { try { return JSON.parse(match.sizePrices); } catch { return fallbackMatch?.sizePrices; } })() : fallbackMatch?.sizePrices),
         };
       }
     }

@@ -134,6 +134,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
               image: apiMatch.image || fb.image,
               images: (apiMatch.images && apiMatch.images.length > 0) ? apiMatch.images : fb.images,
               variants: (apiMatch.variants && apiMatch.variants.length > 0) ? apiMatch.variants : fb.variants,
+              sizePrices: apiMatch.sizePrices || fb.sizePrices,
             };
           });
 

@@ -90,7 +90,7 @@
       "image": "/uploads/giftscented-1793447073717-a5uud.jpg",
       "subcategory": "Handmade Candles",
       "colors": "Scented Candle Gift Set",
-      "sizes": "3 × 50g – Gift Pack",
+      "sizes": "3 \u00d7 50g \u2013 Gift Pack",
       "reviews": "[]",
       "images": "/uploads/giftscented-1793447073717-a5uud.jpg",
       "variants": "[{\"name\":\"Scented Candle Gift Set\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/giftscented-1793447117057-4dd67.jpg\"]}]"
@@ -188,7 +188,12 @@
       "sizes": "250g Glass Jar, 500g Glass Jar, 1kg Family Pack",
       "reviews": "[]",
       "images": "/uploads/mango1-1793441447586-kta2j.png",
-      "variants": "[{\"name\":\"Raw Mango\",\"hex\":\"#8b5e3c\",\"images\":[\"/uploads/mango2-1793441780054-7dsb3.png\",\"/uploads/mango3-1793441780062-nzoar.png\",\"/uploads/mango4-1793441780071-7xbgl.png\",\"/uploads/mango1-1793441815566-tn5bh.png\"]},{\"name\":\"Lemon\",\"hex\":\"#d49a37\",\"images\":[\"/uploads/swalemon-1793441754987-uulfs.png\"]},{\"name\":\"chilli\",\"hex\":\"#2e7d32\",\"images\":[\"/uploads/swachilli-1793441768917-33zuf.png\"]}]"
+      "variants": "[{\"name\":\"Raw Mango\",\"hex\":\"#8b5e3c\",\"images\":[\"/uploads/mango2-1793441780054-7dsb3.png\",\"/uploads/mango3-1793441780062-nzoar.png\",\"/uploads/mango4-1793441780071-7xbgl.png\",\"/uploads/mango1-1793441815566-tn5bh.png\"]},{\"name\":\"Lemon\",\"hex\":\"#d49a37\",\"images\":[\"/uploads/swalemon-1793441754987-uulfs.png\"]},{\"name\":\"chilli\",\"hex\":\"#2e7d32\",\"images\":[\"/uploads/swachilli-1793441768917-33zuf.png\"]}]",
+      "sizePrices": {
+        "250g Glass Jar": 299,
+        "500g Glass Jar": 549,
+        "1kg Family Pack": 999
+      }
     },
     {
       "id": 1237,
@@ -207,7 +212,12 @@
       "sizes": "250g Box (8 pcs), 500g Box (16 pcs), 1kg Family Gift Pack",
       "reviews": "[]",
       "images": "/uploads/dryfruits-1793442373552-sz7w3.png",
-      "variants": "[{\"name\":\"Mixed Dryfruits\",\"hex\":\"#8b5e3c\",\"images\":[\"/uploads/mixedseeds-1793442649825-cc6r3.png\"]},{\"name\":\"Almond (बदाम)\",\"hex\":\"#d49a37\",\"images\":[\"/uploads/ragi-1793442659799-s9nsr.png\"]},{\"name\":\"Anjeer (अंजीर)\",\"hex\":\"#5c4033\",\"images\":[]},{\"name\":\"DryFruits Laddu,Methi Laddu,MixedFruits Laddu,TilGudLaddu,Ragi Laddu,Oats Laddu\",\"hex\":\"#7451ba\",\"images\":[]},{\"name\":\"Oats Laddu\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/oats-1793442631900-j8d60.png\"]}]"
+      "variants": "[{\"name\":\"Mixed Dryfruits\",\"hex\":\"#8b5e3c\",\"images\":[\"/uploads/mixedseeds-1793442649825-cc6r3.png\"]},{\"name\":\"Almond (\u092c\u0926\u093e\u092e)\",\"hex\":\"#d49a37\",\"images\":[\"/uploads/ragi-1793442659799-s9nsr.png\"]},{\"name\":\"Anjeer (\u0905\u0902\u091c\u0940\u0930)\",\"hex\":\"#5c4033\",\"images\":[]},{\"name\":\"DryFruits Laddu,Methi Laddu,MixedFruits Laddu,TilGudLaddu,Ragi Laddu,Oats Laddu\",\"hex\":\"#7451ba\",\"images\":[]},{\"name\":\"Oats Laddu\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/oats-1793442631900-j8d60.png\"]}]",
+      "sizePrices": {
+        "250g Box (8 pcs)": 499,
+        "500g Box (16 pcs)": 949,
+        "1kg Family Gift Pack": 1799
+      }
     },
     {
       "id": 1238,
@@ -226,7 +236,11 @@
       "sizes": "250g Pack, 500g Pack",
       "reviews": "[]",
       "images": "/uploads/papad-1793442846855-4wy7q.jpg",
-      "variants": "[{\"name\":\"Black Pepper Hing\",\"hex\":\"#262626\",\"images\":[\"/uploads/papad2-1793442945091-7mrwy.webp\",\"/uploads/papad-1793442979255-vpyhh.jpg\"]}]"
+      "variants": "[{\"name\":\"Black Pepper Hing\",\"hex\":\"#262626\",\"images\":[\"/uploads/papad2-1793442945091-7mrwy.webp\",\"/uploads/papad-1793442979255-vpyhh.jpg\"]}]",
+      "sizePrices": {
+        "250g Pack": 199,
+        "500g Pack": 369
+      }
     },
     {
       "id": 1239,
@@ -245,7 +259,11 @@
       "sizes": "200g Pouch, 500g Pouch",
       "reviews": "[]",
       "images": "/images/collections/food-ngo/spices-masala/goda-masala-roasted-spices.jpg",
-      "variants": "[{\"name\":\"Authentic Maharashtrian Blend\",\"hex\":\"#b84534\",\"images\":[\"/images/collections/food-ngo/spices-masala/goda-masala-roasted-spices.jpg\"]},{\"name\":\"cardamom\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/cardamom-1793443442473-c2aar.webp\",\"/uploads/cardamom2-1793443442525-r3jtj.jpg\",\"/uploads/cardamom3-1793443442535-ywr9s.webp\"]},{\"name\":\"cloves\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/cloves-1793443476108-pke1o.jpg\",\"/uploads/cloves-1793443476113-platv.png\",\"/uploads/cloves-1793443476117-btwt8.webp\"]},{\"name\":\"blackpaper\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/blackpaper-1793443537800-xajkc.webp\",\"/uploads/blackpaper2-1793443537806-anc93.webp\",\"/uploads/paper-1793443537810-i8qkl.webp\"]},{\"name\":\"Cinnamomum\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/dal-1793443597965-dg229.webp\",\"/uploads/dalshini-1793443597971-fxv6d.webp\",\"/uploads/dalshini2-1793443597975-qpvcw.jpg\"]}]"
+      "variants": "[{\"name\":\"Authentic Maharashtrian Blend\",\"hex\":\"#b84534\",\"images\":[\"/images/collections/food-ngo/spices-masala/goda-masala-roasted-spices.jpg\"]},{\"name\":\"cardamom\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/cardamom-1793443442473-c2aar.webp\",\"/uploads/cardamom2-1793443442525-r3jtj.jpg\",\"/uploads/cardamom3-1793443442535-ywr9s.webp\"]},{\"name\":\"cloves\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/cloves-1793443476108-pke1o.jpg\",\"/uploads/cloves-1793443476113-platv.png\",\"/uploads/cloves-1793443476117-btwt8.webp\"]},{\"name\":\"blackpaper\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/blackpaper-1793443537800-xajkc.webp\",\"/uploads/blackpaper2-1793443537806-anc93.webp\",\"/uploads/paper-1793443537810-i8qkl.webp\"]},{\"name\":\"Cinnamomum\",\"hex\":\"#7451ba\",\"images\":[\"/uploads/dal-1793443597965-dg229.webp\",\"/uploads/dalshini-1793443597971-fxv6d.webp\",\"/uploads/dalshini2-1793443597975-qpvcw.jpg\"]}]",
+      "sizePrices": {
+        "200g Pouch": 249,
+        "500g Pouch": 580
+      }
     },
     {
       "id": 1240,
@@ -326,7 +344,7 @@
     {
       "id": 1244,
       "slug": "artisan-mini-gift-box",
-      "name": "Artisan Mini Gift Box — A Little Thank You",
+      "name": "Artisan Mini Gift Box \u2014 A Little Thank You",
       "description": "A compact, heartfelt gift box with hand-poured soy wax votive candle, herbal tea sachet, and a handwritten gratitude card made from seeded paper that grows into tulsi.",
       "category": "Gifting",
       "sku": "SW-GF-006",
