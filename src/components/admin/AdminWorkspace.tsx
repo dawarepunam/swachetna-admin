@@ -1662,12 +1662,14 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
   const [colorsText, setColorsText] = useState(Array.isArray(product?.colors) ? product.colors.join(", ") : "");
   const [sizesText, setSizesText] = useState(Array.isArray(product?.sizes) ? product.sizes.join(", ") : "");
   const [sizePrices, setSizePrices] = useState<Record<string, number>>(product?.sizePrices || {});
-  const [variantsList, setVariantsList] = useState<Array<{ name: string; hex: string; images: string[] }>>(() => {
+  const [variantsList, setVariantsList] = useState<Array<{ name: string; hex: string; images: string[]; price?: number; sizePrices?: Record<string, number> }>>(() => {
     if (Array.isArray(product?.variants) && product.variants.length > 0) {
       return product.variants.map((v) => ({
         name: v.name || "",
         hex: v.hex || "#7451ba",
-        images: Array.isArray(v.images) ? v.images : []
+        images: Array.isArray(v.images) ? v.images : [],
+        price: v.price,
+        sizePrices: (v as any).sizePrices || undefined
       }));
     }
     return [];
@@ -1704,7 +1706,9 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
         setVariantsList(product.variants.map((v) => ({
           name: v.name || "",
           hex: v.hex || "#7451ba",
-          images: Array.isArray(v.images) ? v.images : []
+          images: Array.isArray(v.images) ? v.images : [],
+          price: v.price,
+          sizePrices: (v as any).sizePrices || undefined
         })));
       } else {
         setVariantsList([]);
@@ -2289,6 +2293,76 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
                     }}
                   />
                 </label>
+              </div>
+
+              {/* Sub-type Custom Price & Weight Pricing */}
+              <div style={{ margin: "10px 0", padding: "10px", background: "#faf8fc", border: "1px dashed #d6c6e7", borderRadius: "6px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+                  <strong style={{ fontSize: "11px", color: "#54376f" }}>
+                    💰 Specific Prices for &ldquo;{variantsList[activeVariantTab].name}&rdquo; (Optional):
+                  </strong>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "11px", color: "#614e76" }}>Base Price: ₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={variantsList[activeVariantTab].price !== undefined ? variantsList[activeVariantTab].price : ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setVariantsList((prev) => {
+                          const updated = [...prev];
+                          const cur = updated[activeVariantTab];
+                          if (cur) cur.price = val ? Number(val) : undefined;
+                          return updated;
+                        });
+                      }}
+                      placeholder={price ? `Default: ₹${price}` : "0"}
+                      style={{ width: "90px", padding: "3px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #c9bad9" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Sub-type size prices */}
+                {sizesText.split(",").map((s) => s.trim()).filter(Boolean).length > 0 && (
+                  <div style={{ marginTop: "6px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "8px" }}>
+                    {sizesText.split(",").map((s) => s.trim()).filter(Boolean).map((sz) => {
+                      const curVar = variantsList[activeVariantTab];
+                      const curSzPrices = curVar.sizePrices || {};
+                      const defaultP = sizePrices[sz] !== undefined ? sizePrices[sz] : (price ? Number(price) : "");
+                      return (
+                        <div key={sz} style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          <span style={{ fontSize: "10px", fontWeight: "600", color: "#483660" }}>{sz}:</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <span style={{ fontSize: "11px", color: "#7451ba", fontWeight: "700" }}>₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={curSzPrices[sz] !== undefined ? curSzPrices[sz] : ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setVariantsList((prev) => {
+                                  const updated = [...prev];
+                                  const cur = updated[activeVariantTab];
+                                  if (cur) {
+                                    cur.sizePrices = {
+                                      ...(cur.sizePrices || {}),
+                                      [sz]: val ? Number(val) : undefined as any,
+                                    };
+                                  }
+                                  return updated;
+                                });
+                              }}
+                              placeholder={defaultP ? `Default: ₹${defaultP}` : "e.g. 499"}
+                              style={{ width: "100%", padding: "3px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #d4c8db" }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Thumbnails of current sub-type */}

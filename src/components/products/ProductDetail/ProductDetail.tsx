@@ -155,25 +155,33 @@ export default function ProductDetail({ product }: { product: Product }) {
   const availableSizes = useMemo(() => product.sizes || [], [product.sizes]);
   const [selectedSize, setSelectedSize] = useState<string>(availableSizes[0] || "");
 
-  // Dynamic price calculation based on selected weight/package size
+  // Dynamic price calculation based on selected weight/package size & selected variant
   const activePrice = useMemo(() => {
+    // 1. Variant specific sizePrices
+    if (selectedSize && activeShade && (activeShade as any).sizePrices && (activeShade as any).sizePrices[selectedSize] !== undefined) {
+      return Number((activeShade as any).sizePrices[selectedSize]);
+    }
+    // 2. Product level sizePrices
     if (selectedSize && product.sizePrices && product.sizePrices[selectedSize] !== undefined) {
       return Number(product.sizePrices[selectedSize]);
     }
+    // 3. Variant base price
+    if (activeShade && activeShade.price !== undefined) {
+      return Number(activeShade.price);
+    }
     return product.price;
-  }, [selectedSize, product.sizePrices, product.price]);
+  }, [selectedSize, activeShade, product.sizePrices, product.price]);
 
   // Dynamic original price (MRP) calculation
   const activeOriginalPrice = useMemo(() => {
-    if (selectedSize && product.sizePrices && product.sizePrices[selectedSize] !== undefined) {
-      // Scale original price proportionally if defined
-      if (product.originalPrice && product.price) {
-        const ratio = product.originalPrice / product.price;
-        return Math.round(Number(product.sizePrices[selectedSize]) * ratio);
-      }
+    const baseP = product.price || 1;
+    const origP = product.originalPrice || Math.round(baseP * 1.3);
+    const ratio = origP / baseP;
+    if (activePrice !== product.price) {
+      return Math.round(activePrice * ratio);
     }
     return product.originalPrice;
-  }, [selectedSize, product.sizePrices, product.originalPrice, product.price]);
+  }, [activePrice, product.price, product.originalPrice]);
 
   // Reviews & Rating System
   const [reviewsList, setReviewsList] = useState<ProductReview[]>(product.reviews || []);
@@ -459,24 +467,16 @@ export default function ProductDetail({ product }: { product: Product }) {
                   <strong>{selectedSize}</strong>
                 </div>
                 <div className={styles.sizePills}>
-                  {availableSizes.map((sz) => {
-                    const szPrice = product.sizePrices && product.sizePrices[sz] !== undefined ? product.sizePrices[sz] : null;
-                    return (
-                      <button
-                        key={sz}
-                        type="button"
-                        className={`${styles.sizeBtn} ${selectedSize === sz ? styles.selectedSizeBtn : ""}`}
-                        onClick={() => setSelectedSize(sz)}
-                      >
-                        <span>{sz}</span>
-                        {szPrice !== null && (
-                          <strong style={{ marginLeft: "6px", fontSize: "11px", opacity: 0.9 }}>
-                            {formatCurrency(szPrice)}
-                          </strong>
-                        )}
-                      </button>
-                    );
-                  })}
+                  {availableSizes.map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      className={`${styles.sizeBtn} ${selectedSize === sz ? styles.selectedSizeBtn : ""}`}
+                      onClick={() => setSelectedSize(sz)}
+                    >
+                      {sz}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

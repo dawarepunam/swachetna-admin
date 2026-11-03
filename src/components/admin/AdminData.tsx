@@ -26,6 +26,7 @@ export type AdminProduct = {
     images: string[];
     price?: number;
     stock?: number;
+    sizePrices?: Record<string, number>;
   }>;
   reviews?: ProductReview[];
   gstRate?: number;

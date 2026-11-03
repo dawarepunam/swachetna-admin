@@ -17,6 +17,7 @@ export interface ProductVariant {
   originalPrice?: number;
   stock?: number;
   size?: string;
+  sizePrices?: Record<string, number>; // Sub-product specific prices by weight/size
 }
 
 export interface Product {
