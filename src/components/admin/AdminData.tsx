@@ -30,6 +30,7 @@ export type AdminProduct = {
   reviews?: ProductReview[];
   gstRate?: number;
   hsnCode?: string;
+  sizePrices?: Record<string, number>;
 };
 export type AdminCategory = {
   slug: string;

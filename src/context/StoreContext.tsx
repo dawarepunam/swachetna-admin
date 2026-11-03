@@ -15,6 +15,8 @@ type CartLine = {
   category?: string;
   gstRate?: number;
   hsnCode?: string;
+  selectedSize?: string;
+  selectedVariant?: string;
 };
 type SavedStore = { cart?: unknown; wishlist?: unknown };
 type StoreValue = {
@@ -25,7 +27,7 @@ type StoreValue = {
   cartCount: number;
   subtotal: number;
   allProducts: Product[];
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number, selectedSize?: string, selectedVariant?: string) => void;
   setQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
@@ -119,15 +121,17 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
     return () => window.removeEventListener("storage", syncFromAnotherTab);
   }, []);
 
-  const addToCart = useCallback((product: Product, requestedQuantity = 1) => {
+  const addToCart = useCallback((product: Product, requestedQuantity = 1, selectedSize?: string, selectedVariant?: string) => {
     if (product.stock < 1) { setNotice(`${product.name} is currently out of stock.`); return; }
     const quantity = Math.min(product.stock, Math.max(1, Math.floor(requestedQuantity)));
-    const targetKey = product.id || product.slug;
+    const sizeSuffix = selectedSize ? `-${selectedSize.replace(/[^a-zA-Z0-9]/g, "")}` : "";
+    const targetKey = (product.id || product.slug) + sizeSuffix;
     const price = typeof product.price === "number" && product.price > 0 ? product.price : 0;
+    const displayName = selectedSize ? `${product.name} (${selectedSize})` : product.name;
 
     setCart((current) => {
       const foundIdx = current.findIndex(
-        (line) => line.productId === targetKey || line.productId === product.id || line.productId === product.slug
+        (line) => line.productId === targetKey
       );
       if (foundIdx > -1) {
         const updated = [...current];
@@ -137,13 +141,15 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
           productId: targetKey,
           quantity: Math.min(product.stock, existing.quantity + quantity),
           price: price || existing.price || 0,
-          name: product.name || existing.name,
+          name: displayName,
           image: product.image || existing.image,
           slug: product.slug || existing.slug,
           sku: product.sku || existing.sku,
           category: product.category || existing.category,
           gstRate: product.gstRate !== undefined ? product.gstRate : existing.gstRate,
           hsnCode: product.hsnCode || existing.hsnCode,
+          selectedSize: selectedSize || existing.selectedSize,
+          selectedVariant: selectedVariant || existing.selectedVariant,
         };
         return updated;
       }
@@ -153,17 +159,19 @@ export function StoreProvider({ children, allProducts }: { children: ReactNode; 
           productId: targetKey,
           quantity,
           price,
-          name: product.name,
+          name: displayName,
           image: product.image,
           slug: product.slug,
           sku: product.sku,
           category: product.category,
           gstRate: product.gstRate,
           hsnCode: product.hsnCode,
+          selectedSize,
+          selectedVariant,
         },
       ];
     });
-    setNotice(`${product.name} added to your shopping bag.`);
+    setNotice(`${displayName} added to your shopping bag.`);
   }, []);
 
   const setQuantity = useCallback((productId: string, quantity: number) => {

@@ -151,9 +151,29 @@ export default function ProductDetail({ product }: { product: Product }) {
 
   const activeMainImage = galleryImages[selectedImageIndex] || activeShade?.images?.[0] || product.image;
 
-  // Variants: Sizes selection
+  // Variants: Sizes selection & Dynamic Price
   const availableSizes = useMemo(() => product.sizes || [], [product.sizes]);
   const [selectedSize, setSelectedSize] = useState<string>(availableSizes[0] || "");
+
+  // Dynamic price calculation based on selected weight/package size
+  const activePrice = useMemo(() => {
+    if (selectedSize && product.sizePrices && product.sizePrices[selectedSize] !== undefined) {
+      return Number(product.sizePrices[selectedSize]);
+    }
+    return product.price;
+  }, [selectedSize, product.sizePrices, product.price]);
+
+  // Dynamic original price (MRP) calculation
+  const activeOriginalPrice = useMemo(() => {
+    if (selectedSize && product.sizePrices && product.sizePrices[selectedSize] !== undefined) {
+      // Scale original price proportionally if defined
+      if (product.originalPrice && product.price) {
+        const ratio = product.originalPrice / product.price;
+        return Math.round(Number(product.sizePrices[selectedSize]) * ratio);
+      }
+    }
+    return product.originalPrice;
+  }, [selectedSize, product.sizePrices, product.originalPrice, product.price]);
 
   // Reviews & Rating System
   const [reviewsList, setReviewsList] = useState<ProductReview[]>(product.reviews || []);
@@ -184,7 +204,8 @@ export default function ProductDetail({ product }: { product: Product }) {
 
   const handleAdd = () => {
     if (product.stock < 1) return;
-    addToCart(product, quantity);
+    const productWithActivePrice = { ...product, price: activePrice, originalPrice: activeOriginalPrice };
+    addToCart(productWithActivePrice, quantity, selectedSize, activeShade?.name);
     setAdded(true);
     if (addedTimer.current) window.clearTimeout(addedTimer.current);
     addedTimer.current = window.setTimeout(() => setAdded(false), 2200);
@@ -192,7 +213,8 @@ export default function ProductDetail({ product }: { product: Product }) {
 
   const handleBuyNow = () => {
     if (product.stock < 1) return;
-    addToCart(product, quantity);
+    const productWithActivePrice = { ...product, price: activePrice, originalPrice: activeOriginalPrice };
+    addToCart(productWithActivePrice, quantity, selectedSize, activeShade?.name);
     router.push("/checkout");
   };
 
@@ -320,19 +342,19 @@ export default function ProductDetail({ product }: { product: Product }) {
             {/* Price Block */}
             <div className={styles.priceBlock}>
               <div className={styles.priceRow}>
-                <strong className={styles.finalPrice}>{formatCurrency(product.price)}</strong>
-                {product.originalPrice && (
+                <strong className={styles.finalPrice}>{formatCurrency(activePrice)}</strong>
+                {activeOriginalPrice && activeOriginalPrice > activePrice && (
                   <>
-                    <del className={styles.origPrice}>{formatCurrency(product.originalPrice)}</del>
+                    <del className={styles.origPrice}>{formatCurrency(activeOriginalPrice)}</del>
                     <span className={styles.discountBadge}>
-                      {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                      {Math.round(((activeOriginalPrice - activePrice) / activeOriginalPrice) * 100)}% OFF
                     </span>
                   </>
                 )}
               </div>
               {(() => {
                 const taxInfo = getProductGst(product);
-                const gstAmount = Math.round((product.price * taxInfo.rate) / (100 + taxInfo.rate));
+                const gstAmount = Math.round((activePrice * taxInfo.rate) / (100 + taxInfo.rate));
                 return (
                   <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                     <small className={styles.taxInclusive} style={{ margin: 0 }}>
@@ -437,16 +459,24 @@ export default function ProductDetail({ product }: { product: Product }) {
                   <strong>{selectedSize}</strong>
                 </div>
                 <div className={styles.sizePills}>
-                  {availableSizes.map((sz) => (
-                    <button
-                      key={sz}
-                      type="button"
-                      className={`${styles.sizeBtn} ${selectedSize === sz ? styles.selectedSizeBtn : ""}`}
-                      onClick={() => setSelectedSize(sz)}
-                    >
-                      {sz}
-                    </button>
-                  ))}
+                  {availableSizes.map((sz) => {
+                    const szPrice = product.sizePrices && product.sizePrices[sz] !== undefined ? product.sizePrices[sz] : null;
+                    return (
+                      <button
+                        key={sz}
+                        type="button"
+                        className={`${styles.sizeBtn} ${selectedSize === sz ? styles.selectedSizeBtn : ""}`}
+                        onClick={() => setSelectedSize(sz)}
+                      >
+                        <span>{sz}</span>
+                        {szPrice !== null && (
+                          <strong style={{ marginLeft: "6px", fontSize: "11px", opacity: 0.9 }}>
+                            {formatCurrency(szPrice)}
+                          </strong>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

@@ -1661,6 +1661,7 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
   });
   const [colorsText, setColorsText] = useState(Array.isArray(product?.colors) ? product.colors.join(", ") : "");
   const [sizesText, setSizesText] = useState(Array.isArray(product?.sizes) ? product.sizes.join(", ") : "");
+  const [sizePrices, setSizePrices] = useState<Record<string, number>>(product?.sizePrices || {});
   const [variantsList, setVariantsList] = useState<Array<{ name: string; hex: string; images: string[] }>>(() => {
     if (Array.isArray(product?.variants) && product.variants.length > 0) {
       return product.variants.map((v) => ({
@@ -1698,6 +1699,7 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
       setGalleryImages(imgs);
       setColorsText(Array.isArray(product.colors) ? product.colors.join(", ") : (product.colors || ""));
       setSizesText(Array.isArray(product.sizes) ? product.sizes.join(", ") : (product.sizes || ""));
+      setSizePrices(product.sizePrices || {});
       if (Array.isArray(product.variants) && product.variants.length > 0) {
         setVariantsList(product.variants.map((v) => ({
           name: v.name || "",
@@ -1722,6 +1724,7 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
       setGalleryImages([]);
       setColorsText("");
       setSizesText("");
+      setSizePrices({});
       setVariantsList([]);
     }
   }, [product, categories]);
@@ -1829,6 +1832,7 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
         images,
         colors,
         sizes,
+        sizePrices,
         variants: variantsToSave,
         reviews: product?.reviews || []
       });
@@ -2113,6 +2117,43 @@ function ProductDialog({ product, categories, onClose, onSave, returnToProducts 
         />
       </label>
     </div>
+
+    {/* Dynamic Price-per-Weight/Size Manager for Admin */}
+    {sizesText.split(",").map((s) => s.trim()).filter(Boolean).length > 0 && (
+      <div style={{ padding: "12px 14px", background: "#fbf9fc", border: "1.5px dashed #cfbdd8", borderRadius: "8px", margin: "10px 0" }}>
+        <strong style={{ fontSize: "12px", color: "#5d3570", display: "block", marginBottom: "4px" }}>
+          ⚖️ Set Price for Each Package Weight / Size (Optional)
+        </strong>
+        <span style={{ fontSize: "11px", color: "#77638d", display: "block", marginBottom: "10px" }}>
+          When user selects a weight or size, price on store will automatically update to this amount.
+        </span>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px" }}>
+          {sizesText.split(",").map((s) => s.trim()).filter(Boolean).map((sz) => (
+            <div key={sz} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <span style={{ fontSize: "11px", fontWeight: "600", color: "#443452" }}>{sz}:</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <span style={{ fontSize: "12px", color: "#7451ba", fontWeight: "700" }}>₹</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={sizePrices[sz] !== undefined ? sizePrices[sz] : ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSizePrices((prev) => ({
+                      ...prev,
+                      [sz]: val ? Number(val) : (price ? Number(price) : 0),
+                    }));
+                  }}
+                  placeholder={price ? `Default: ₹${price}` : "e.g. 499"}
+                  style={{ width: "100%", padding: "4px 8px", fontSize: "12px", borderRadius: "6px", border: "1px solid #d4c8db" }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
 
     {/* Dynamic Sub-Type & Variety Photo Manager for Admin */}
     <div style={{ padding: "14px", background: "#f8f5fc", border: "1.5px solid #dcd1eb", borderRadius: "10px", marginTop: "10px" }}>

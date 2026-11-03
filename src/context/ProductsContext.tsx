@@ -109,6 +109,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
             reviews: Array.isArray(p.reviews) ? p.reviews : [],
             gstRate: p.gstRate !== undefined ? Number(p.gstRate) : undefined,
             hsnCode: p.hsnCode || undefined,
+            sizePrices: typeof p.sizePrices === 'object' && p.sizePrices !== null ? p.sizePrices : (typeof p.sizePrices === 'string' ? (() => { try { return JSON.parse(p.sizePrices); } catch { return undefined; } })() : undefined),
           }));
 
           // Test किंवा placeholder products (जसे की Scented Candle, Charcoal Soap) fallback authentic catalog ला override करू नयेत

@@ -26,6 +26,11 @@ export const products: Product[] = [
     ],
     colors: ["Raw Mango (कैरी)", "Spicy Lemon (लिंबू)", "Green Chilli (मिरची)", "Garlic Infused (लसूण)"],
     sizes: ["250g Glass Jar", "500g Glass Jar", "1kg Family Pack"],
+    sizePrices: {
+      "250g Glass Jar": 299,
+      "500g Glass Jar": 549,
+      "1kg Family Pack": 999
+    },
     variants: [
       {
         name: "Raw Mango (कैरी)",
@@ -83,6 +88,11 @@ export const products: Product[] = [
     ],
     colors: ["Mixed Dryfruits", "Almond (बदाम)", "Anjeer (अंजीर)"],
     sizes: ["250g Box (8 pcs)", "500g Box (16 pcs)", "1kg Family Gift Pack"],
+    sizePrices: {
+      "250g Box (8 pcs)": 499,
+      "500g Box (16 pcs)": 949,
+      "1kg Family Gift Pack": 1799
+    },
     variants: [
       {
         name: "Mixed Dryfruits",
@@ -126,7 +136,11 @@ export const products: Product[] = [
     image: "/images/collections/food-ngo/handmade-papads/urad-dal-papad-crisp.jpg",
     images: ["/images/collections/food-ngo/handmade-papads/urad-dal-papad-crisp.jpg"],
     colors: ["Black Pepper Hing", "Mild Cumin"],
-    sizes: ["250g Pack", "500g Pack"]
+    sizes: ["250g Pack", "500g Pack"],
+    sizePrices: {
+      "250g Pack": 199,
+      "500g Pack": 369
+    }
   },
   {
     id: "product-018",
@@ -144,7 +158,11 @@ export const products: Product[] = [
     image: "/images/collections/food-ngo/spices-masala/goda-masala-roasted-spices.jpg",
     images: ["/images/collections/food-ngo/spices-masala/goda-masala-roasted-spices.jpg"],
     colors: ["Authentic Maharashtrian Blend"],
-    sizes: ["200g Pouch", "500g Pouch"]
+    sizes: ["200g Pouch", "500g Pouch"],
+    sizePrices: {
+      "200g Pouch": 249,
+      "500g Pouch": 580
+    }
   },
 
   // ==========================================
@@ -319,6 +337,10 @@ export const products: Product[] = [
     ],
     colors: ["Golden Natural", "Indigo Blue", "Charcoal Black"],
     sizes: ["Standard Tote (16x14x6 inch)", "Large Market Tote (19x16x7 inch)"],
+    sizePrices: {
+      "Standard Tote (16x14x6 inch)": 599,
+      "Large Market Tote (19x16x7 inch)": 799
+    },
     variants: [
       {
         name: "Golden Natural",

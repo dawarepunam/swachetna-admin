@@ -41,4 +41,5 @@ export interface Product {
   reviews?: ProductReview[];
   gstRate?: number; // GST percentage e.g. 0, 5, 12, 18
   hsnCode?: string; // HSN Code e.g. "6305", "2106", "6912"
+  sizePrices?: Record<string, number>; // e.g. { "250g Box (8 pcs)": 499, "500g Box (16 pcs)": 899, "1kg Family Gift Pack": 1699 }
 }
