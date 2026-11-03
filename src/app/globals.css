@@ -39,10 +39,46 @@ body {
   padding-right: env(safe-area-inset-right, 0px);
 }
 
-/* Touch & tap targets for mobile/iOS */
+/* Touch & tap targets for mobile/iOS / Android / Mac */
 button, a, input, select, textarea {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent unwanted automatic zoom on iOS Safari when focusing form inputs */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Fluid responsive media & images without horizontal overflow */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Dynamic viewport units fallback for older iOS and modern devices */
+:root {
+  --app-height: 100vh;
+}
+@supports (height: 100dvh) {
+  :root {
+    --app-height: 100dvh;
+  }
+}
+
+/* Word wrapping to prevent horizontal breaking on narrow mobile screens (320px - 390px) */
+p, span, h1, h2, h3, h4, h5, h6, strong, a {
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Universal fluid image and media responsiveness */
